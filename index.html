@@ -3,50 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AE Workshop: Topic Voting</title>
+    <title>AE Workshop Requests</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e0e0e0; }
-        .glass-panel { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .ae-gradient { background: linear-gradient(135deg, #9999ff 0%, #0000ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .btn-primary { background-color: #3b82f6; transition: all 0.2s; }
-        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
-        .vote-btn:hover { color: #60a5fa; transform: scale(1.1); }
-        /* Animation for reordering */
-        .list-item { transition: all 0.5s ease; }
+        /* Custom Base Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050508;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 44, 133, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(68, 126, 247, 0.15) 0px, transparent 50%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(30, 32, 45, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* The "AE" Gradient Text */
+        .text-gradient {
+            background: linear-gradient(135deg, #CF9FFF 0%, #5B7FFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Button Gradient */
+        .btn-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gradient:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* List Item Animation */
+        .list-card {
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .list-card:hover {
+            transform: scale(1.01);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f111a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+<body class="min-h-screen pb-12">
 
-    <header class="w-full max-w-2xl mb-8 text-center">
-        <h1 class="text-4xl sm:text-5xl font-extrabold mb-2"><span class="ae-gradient">Ae</span> Workshop</h1>
-        <p class="text-gray-400 text-lg">Suggest topics, add references, and vote for what you want to learn.</p>
-    </header>
+    <div class="fixed inset-0 z-[-1] opacity-20" style="background-image: linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px); background-size: 40px 40px;"></div>
 
-    <div class="w-full max-w-2xl glass-panel rounded-xl p-6 mb-8 shadow-lg">
-        <h2 class="text-xl font-semibold mb-4 text-white">Add a New Topic</h2>
-        <div class="flex flex-col gap-3">
-            <input type="text" id="topicInput" placeholder="E.g., Character Rigging, UI Animation..." class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition">
-            <input type="url" id="linkInput" placeholder="Reference Link (optional) - e.g., Pinterest/Youtube URL" class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition">
-            <button id="addBtn" class="btn-primary text-white font-bold py-3 px-6 rounded-lg w-full sm:w-auto self-end mt-2">
-                Add Topic
-            </button>
-        </div>
-    </div>
+    <main class="max-w-3xl mx-auto px-4 pt-12 sm:pt-20">
+        
+        <header class="text-center mb-12">
+            <div class="inline-block mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-wider uppercase">
+                Company Workshop
+            </div>
+            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white mb-4">
+                <span class="text-gradient">Ae</span> Training
+            </h1>
+            <p class="text-gray-400 text-lg sm:text-xl max-w-lg mx-auto leading-relaxed">
+                What do you want to learn? Add topics, drop reference links, and vote for the winners.
+            </p>
+        </header>
 
-    <div class="w-full max-w-2xl">
-        <div class="flex justify-between items-end mb-4 px-2">
-            <h2 class="text-xl font-semibold text-white">Ranked Topics</h2>
-            <span class="text-sm text-gray-500">Sorted by popularity</span>
-        </div>
-        <ul id="topicList" class="space-y-3">
-            <li class="text-center text-gray-500 py-8 animate-pulse">Loading suggestions...</li>
-        </ul>
-    </div>
+        <section class="glass-panel rounded-2xl p-1 mb-12 transform transition-all hover:shadow-2xl hover:shadow-indigo-500/10">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="ph-bold ph-plus-circle text-indigo-400 text-xl"></i>
+                    <h2 class="text-lg font-bold text-white">Suggest a Topic</h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="relative group">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg opacity-30 blur group-focus-within:opacity-100 transition duration-500"></div>
+                        <input type="text" id="topicInput" placeholder="e.g. Advanced Masking & Rotoscoping..." 
+                            class="relative w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg px-5 py-4 outline-none border border-gray-800 focus:border-transparent transition-all">
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <i class="ph ph-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="url" id="linkInput" placeholder="Reference URL (Optional)" 
+                                class="w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg pl-10 pr-5 py-3.5 outline-none border border-gray-800 focus:border-indigo-500/50 transition-all text-sm">
+                        </div>
+                        <button id="addBtn" class="btn-gradient text-white font-bold py-3.5 px-8 rounded-lg shadow-lg flex items-center justify-center gap-2 sm:w-auto w-full">
+                            <span>Submit</span>
+                            <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-baseline justify-between mb-6 px-2">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="ph-fill ph-list-dashes text-indigo-500"></i> Request List
+                </h2>
+                <span class="text-xs font-medium text-gray-500 uppercase tracking-widest">Ranked by Interest</span>
+            </div>
+
+            <ul id="topicList" class="space-y-4 pb-20">
+                <li class="glass-panel rounded-xl p-6 animate-pulse flex items-center justify-between">
+                    <div class="h-4 bg-gray-700 rounded w-1/3"></div>
+                    <div class="h-8 w-8 bg-gray-700 rounded-full"></div>
+                </li>
+            </ul>
+        </section>
+
+    </main>
 
     <script type="module">
-        // Import Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
@@ -59,30 +148,36 @@
             appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
         };
 
-        // Initialize
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const colRef = collection(db, 'topics');
 
-        // DOM Elements
         const topicInput = document.getElementById('topicInput');
         const linkInput = document.getElementById('linkInput');
         const addBtn = document.getElementById('addBtn');
         const topicList = document.getElementById('topicList');
 
-        // --- ADD TOPIC FUNCTION ---
+        // --- Add Topic ---
         addBtn.addEventListener('click', async () => {
             const topicText = topicInput.value.trim();
-            const linkText = linkInput.value.trim();
+            let linkText = linkInput.value.trim();
 
             if (!topicText) {
-                alert("Please enter a topic name.");
+                // Shake animation on empty input
+                topicInput.parentElement.classList.add('animate-bounce');
+                setTimeout(() => topicInput.parentElement.classList.remove('animate-bounce'), 500);
                 return;
             }
 
+            // Basic URL cleanup
+            if (linkText && !linkText.startsWith('http')) {
+                linkText = 'https://' + linkText;
+            }
+
             try {
+                const originalBtnText = addBtn.innerHTML;
                 addBtn.disabled = true;
-                addBtn.innerText = "Adding...";
+                addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
                 
                 await addDoc(colRef, {
                     title: topicText,
@@ -91,88 +186,90 @@
                     createdAt: serverTimestamp()
                 });
 
-                // Clear inputs
                 topicInput.value = '';
                 linkInput.value = '';
             } catch (err) {
                 console.error(err);
-                alert("Error adding topic. Check console.");
+                alert("Error adding topic.");
             } finally {
                 addBtn.disabled = false;
-                addBtn.innerText = "Add Topic";
+                addBtn.innerHTML = `<span>Submit</span><i class="ph-bold ph-check"></i>`;
+                setTimeout(() => {
+                    addBtn.innerHTML = `<span>Submit</span><i class="ph-bold ph-arrow-right"></i>`;
+                }, 2000);
             }
         });
 
-        // --- REALTIME RENDER & SORTING ---
-        // We order by votes (descending) to achieve the "Ranking" effect
+        // --- Render List ---
         const q = query(colRef, orderBy("votes", "desc"));
 
         onSnapshot(q, (snapshot) => {
             topicList.innerHTML = '';
             
             const topics = [];
-            snapshot.docs.forEach(doc => {
-                topics.push({ ...doc.data(), id: doc.id });
-            });
+            snapshot.docs.forEach(doc => topics.push({ ...doc.data(), id: doc.id }));
 
             if(topics.length === 0) {
-                topicList.innerHTML = `<li class="text-center text-gray-500 py-4">No topics yet. Be the first!</li>`;
+                topicList.innerHTML = `
+                    <div class="text-center py-12 opacity-50">
+                        <i class="ph-duotone ph-ghost text-4xl mb-2"></i>
+                        <p>No topics found. Start the list!</p>
+                    </div>`;
                 return;
             }
 
-            topics.forEach(topic => {
+            topics.forEach((topic, index) => {
                 const li = document.createElement('li');
-                li.className = "list-item glass-panel p-4 rounded-lg flex items-center justify-between gap-4";
+                li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group";
                 
-                // Check if link exists
-                const linkHtml = topic.link 
-                    ? `<a href="${topic.link}" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline mt-1 block truncate max-w-[200px]">View Reference ↗</a>` 
+                // Rank styling (Top 3 get special colors)
+                let rankColor = "text-gray-500";
+                if(index === 0) rankColor = "text-yellow-400";
+                if(index === 1) rankColor = "text-gray-300";
+                if(index === 2) rankColor = "text-orange-400";
+
+                const linkBadge = topic.link 
+                    ? `<a href="${topic.link}" target="_blank" class="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs rounded-full transition-colors" onclick="event.stopPropagation();">
+                         <i class="ph-bold ph-link"></i> Reference
+                       </a>` 
                     : '';
 
                 li.innerHTML = `
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-lg font-medium text-white break-words">${escapeHtml(topic.title)}</h3>
-                        ${linkHtml}
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
+                        <span class="text-xl font-black ${rankColor} opacity-50 font-mono mt-0.5 w-6 text-right">#${index + 1}</span>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-lg font-medium text-gray-100 leading-tight break-words group-hover:text-white transition-colors">
+                                ${escapeHtml(topic.title)}
+                            </h3>
+                            ${linkBadge}
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xl font-bold text-gray-300 w-8 text-center">${topic.votes}</span>
-                        <button class="vote-btn bg-[#2a2a2a] hover:bg-[#333] border border-gray-600 rounded-full p-2 transition cursor-pointer" data-id="${topic.id}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                            </svg>
-                        </button>
-                    </div>
+                    
+                    <button class="vote-btn flex flex-col items-center justify-center bg-[#1a1c26] hover:bg-[#252836] border border-gray-700 w-14 h-14 rounded-xl transition-all group-hover:border-indigo-500/30 active:scale-95" data-id="${topic.id}">
+                        <i class="ph-bold ph-caret-up text-indigo-400 text-lg mb-[-4px]"></i>
+                        <span class="font-bold text-white text-sm">${topic.votes}</span>
+                    </button>
                 `;
                 topicList.appendChild(li);
             });
 
-            // Attach event listeners to new buttons
+            // Vote Listeners
             document.querySelectorAll('.vote-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Prevent accidental double clicks visually or rapid fire
                     const id = e.currentTarget.getAttribute('data-id');
                     handleVote(id);
                 });
             });
         });
 
-        // --- VOTE FUNCTION ---
         async function handleVote(docId) {
             const docRef = doc(db, 'topics', docId);
-            await updateDoc(docRef, {
-                votes: increment(1)
-            });
+            await updateDoc(docRef, { votes: increment(1) });
         }
 
-        // Basic HTML escape to prevent XSS
         function escapeHtml(text) {
             if(!text) return text;
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
         }
     </script>
 </body>
