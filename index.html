@@ -1,267 +1,414 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInAnonymously, 
-  onAuthStateChanged,
-  signInWithCustomToken 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  onSnapshot, 
-  doc, 
-  updateDoc, 
-  arrayUnion, 
-  arrayRemove,
-  serverTimestamp
-} from 'firebase/firestore';
-import { ThumbsUp, Plus, Loader2, Video, Zap, Layers, Sparkles } from 'lucide-react';
-
-// --- Firebase Initialization ---
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-// Collection name for storing workshop topics
-const COLLECTION_NAME = 'ae_workshop_topics';
-
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [topics, setTopics] = useState([]);
-  const [newTopic, setNewTopic] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  // 1. Authenticate User
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AE Workshop Voting</title>
+    <style>
+        :root {
+            /* After Effects Inspired Theme */
+            --bg-color: #161616;
+            --card-bg: #232323;
+            --ae-purple: #D3A7FF; /* Light Purple for text/accents */
+            --ae-dark-purple: #38285c; /* Dark Purple for backgrounds */
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --border-color: #333333;
         }
-      } catch (error) {
-        console.error("Auth error:", error);
-      }
-    };
-    initAuth();
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-  // 2. Real-time Data Listener
-  useEffect(() => {
-    if (!user) return;
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
 
-    // PATH: /artifacts/{appId}/public/data/{COLLECTION_NAME}
-    // Using public path so everyone can see and vote
-    const topicsRef = collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME);
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--ae-purple);
+            padding-bottom: 20px;
+        }
 
-    const unsubscribe = onSnapshot(topicsRef, (snapshot) => {
-      const fetchedTopics = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // Sort manually in client (Rule 2: Avoid complex queries)
-      // Sort by vote count (descending), then by creation time
-      const sortedTopics = fetchedTopics.sort((a, b) => {
-        const votesA = a.votes?.length || 0;
-        const votesB = b.votes?.length || 0;
-        if (votesB !== votesA) return votesB - votesA;
-        // Fallback to creation time if votes are equal (newest first)
-        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
-      });
+        h1 {
+            margin: 0;
+            color: var(--ae-purple);
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
 
-      setTopics(sortedTopics);
-      setLoading(false);
-    }, (error) => {
-      console.error("Data fetch error:", error);
-      setLoading(false);
-    });
+        p.subtitle {
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
 
-    return () => unsubscribe();
-  }, [user]);
+        /* Input Section */
+        .input-group {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-  // Handle adding a new topic
-  const handleAddTopic = async (e) => {
-    e.preventDefault();
-    if (!newTopic.trim() || !user) return;
+        label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: -5px;
+        }
 
-    setSubmitting(true);
-    try {
-      const topicsRef = collection(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME);
-      await addDoc(topicsRef, {
-        text: newTopic.trim(),
-        votes: [user.uid], // Auto-vote for your own topic
-        createdBy: user.uid,
-        createdAt: serverTimestamp()
-      });
-      setNewTopic('');
-    } catch (error) {
-      console.error("Error adding topic:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+        input {
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: #121212;
+            color: white;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
 
-  // Handle voting toggle
-  const handleVote = async (topic) => {
-    if (!user) return;
+        input:focus {
+            outline: none;
+            border-color: var(--ae-purple);
+        }
 
-    const topicRef = doc(db, 'artifacts', appId, 'public', 'data', COLLECTION_NAME, topic.id);
-    const hasVoted = topic.votes?.includes(user.uid);
+        button#add-btn {
+            background: var(--ae-purple);
+            color: #1a0b2e;
+            font-weight: 800;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
 
-    try {
-      if (hasVoted) {
-        await updateDoc(topicRef, {
-          votes: arrayRemove(user.uid)
-        });
-      } else {
-        await updateDoc(topicRef, {
-          votes: arrayUnion(user.uid)
-        });
-      }
-    } catch (error) {
-      console.error("Error updating vote:", error);
-    }
-  };
+        button#add-btn:hover {
+            opacity: 0.9;
+        }
 
-  // Render loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white" dir="rtl">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-        <span className="mr-3">טוען נתונים...</span>
-      </div>
-    );
-  }
+        button#add-btn:active {
+            transform: scale(0.98);
+        }
 
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans" dir="rtl">
-      {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 p-6 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500"></div>
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30">
-              <Video className="w-8 h-8 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">סדנת After Effects</h1>
-              <p className="text-slate-400 text-sm">בחרו את הנושאים שמעניינים אתכם ביותר</p>
-            </div>
-          </div>
-          <div className="text-center md:text-left text-xs text-slate-500 bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700">
-            {topics.length} נושאים הוצעו • {topics.reduce((acc, t) => acc + (t.votes?.length || 0), 0)} הצבעות
-          </div>
-        </div>
-      </header>
+        /* Topics List */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
 
-      <main className="max-w-4xl mx-auto p-4 md:p-8">
+        .topic-card {
+            background: var(--card-bg);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-color: #555;
+        }
+
+        /* The purple progress bar effect on the left */
+        .topic-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--ae-purple);
+            opacity: 0.5;
+        }
+
+        .topic-content {
+            flex-grow: 1;
+            margin-right: 15px;
+            overflow: hidden; /* prevents long text breaking layout */
+        }
+
+        .topic-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .topic-link {
+            font-size: 0.8rem;
+            color: var(--ae-purple);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .topic-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* Vote Button Area */
+        .vote-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            min-width: 45px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .vote-box:hover {
+            background: #333;
+            border-color: var(--ae-purple);
+        }
+
+        .vote-box:active {
+            background: var(--ae-purple);
+        }
         
-        {/* Input Section */}
-        <div className="mb-10 bg-gradient-to-br from-slate-800 to-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-300">
-            <Sparkles className="w-5 h-5" />
-            יש לכם רעיון לנושא?
-          </h2>
-          <form onSubmit={handleAddTopic} className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              value={newTopic}
-              onChange={(e) => setNewTopic(e.target.value)}
-              placeholder="למשל: שימוש ב-Expressions, אנימציית טקסט, 3D Camera..."
-              className="flex-1 bg-slate-900/80 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-slate-500 transition-all"
-              disabled={submitting}
-            />
-            <button
-              type="submit"
-              disabled={submitting || !newTopic.trim()}
-              className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20"
-            >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-              הוסף נושא
-            </button>
-          </form>
+        .vote-box:active .vote-count, 
+        .vote-box:active .vote-arrow {
+            color: #000;
+        }
+
+        .vote-arrow {
+            font-size: 1.2rem;
+            color: var(--ae-purple);
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .vote-count {
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Utility */
+        .loading {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 40px;
+            font-style: italic;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .topic-card {
+                padding: 12px;
+            }
+            .topic-title {
+                font-size: 1rem;
+            }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AE Workshop Topics</h1>
+            <p class="subtitle">Suggest topics and vote up your favorites.</p>
+        </header>
+
+        <div class="input-group">
+            <label for="topicInput">Topic Name</label>
+            <input type="text" id="topicInput" placeholder="e.g. 3D Camera Tracking" autocomplete="off">
+            
+            <label for="linkInput">Reference Link (Optional)</label>
+            <input type="url" id="linkInput" placeholder="https://..." autocomplete="off">
+            
+            <button id="add-btn">Add to List</button>
         </div>
 
-        {/* List Section */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Layers className="w-6 h-6 text-blue-400" />
-            נושאים להצבעה
-            <span className="text-sm font-normal text-slate-400 mr-2">(הכי מבוקשים למעלה)</span>
-          </h2>
-
-          {topics.length === 0 ? (
-            <div className="text-center py-16 bg-slate-800/30 rounded-2xl border border-dashed border-slate-700">
-              <Zap className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 text-lg">עדיין אין נושאים ברשימה.</p>
-              <p className="text-slate-500">היו הראשונים להוסיף נושא!</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {topics.map((topic) => {
-                const isVoted = topic.votes?.includes(user?.uid);
-                const voteCount = topic.votes?.length || 0;
-                
-                return (
-                  <div 
-                    key={topic.id} 
-                    className={`group relative p-4 rounded-xl border transition-all duration-200 ${
-                      isVoted 
-                        ? 'bg-slate-800/80 border-purple-500/50 shadow-[0_0_15px_-5px_rgba(168,85,247,0.2)]' 
-                        : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className={`text-lg font-medium transition-colors ${isVoted ? 'text-white' : 'text-slate-300'}`}>
-                          {topic.text}
-                        </h3>
-                      </div>
-
-                      <button
-                        onClick={() => handleVote(topic)}
-                        className={`flex flex-col items-center justify-center min-w-[60px] p-2 rounded-lg transition-all ${
-                          isVoted
-                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50 transform scale-105'
-                            : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white'
-                        }`}
-                      >
-                        <ThumbsUp className={`w-5 h-5 mb-1 ${isVoted ? 'fill-current' : ''}`} />
-                        <span className="text-sm font-bold">{voteCount}</span>
-                      </button>
-                    </div>
-                    
-                    {/* Progress bar effect for visual ranking */}
-                    <div 
-                      className="absolute bottom-0 right-0 h-1 bg-purple-500/20 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${Math.min((voteCount / (topics[0]?.votes?.length || 1)) * 100, 100)}%`,
-                        opacity: isVoted ? 1 : 0 
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
-      
-      <footer className="mt-12 py-6 text-center text-slate-600 text-sm border-t border-slate-800">
-        נבנה עבור סדנת After Effects • לחצו להצביע ולהשפיע
-      </footer>
+        <div id="loading" class="loading">Connecting to database...</div>
+        <ul id="topicList"></ul>
     </div>
-  );
-}
+
+    <!-- Firebase Configuration and Logic -->
+    <script type="module">
+        // Import Firebase from CDN (Web Version)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, increment, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // Your exact configuration keys
+        const firebaseConfig = {
+            apiKey: "AIzaSyAubPtprKuQ_ky5AAboUbZHtu4AFbNVHqA",
+            authDomain: "ae-workshop.firebaseapp.com",
+            projectId: "ae-workshop",
+            storageBucket: "ae-workshop.firebasestorage.app",
+            messagingSenderId: "996938664906",
+            appId: "1:996938664906:web:cc1277c3a33f0d93e59d33"
+        };
+
+        // Initialize
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const topicsRef = collection(db, "topics");
+
+        // DOM Elements
+        const topicInput = document.getElementById("topicInput");
+        const linkInput = document.getElementById("linkInput");
+        const addBtn = document.getElementById("add-btn");
+        const topicList = document.getElementById("topicList");
+        const loadingDiv = document.getElementById("loading");
+
+        // --- 1. Add New Topic ---
+        addBtn.addEventListener("click", async () => {
+            const text = topicInput.value.trim();
+            let link = linkInput.value.trim();
+
+            if (!text) {
+                alert("Please enter a topic name.");
+                return;
+            }
+
+            // Simple check to ensure link has http/https if user forgot it
+            if (link && !link.startsWith('http')) {
+                link = 'https://' + link;
+            }
+
+            // Disable button temporarily
+            addBtn.textContent = "Adding...";
+            addBtn.disabled = true;
+
+            try {
+                await addDoc(topicsRef, {
+                    title: text,
+                    url: link,
+                    votes: 1, // Starter vote for the creator
+                    createdAt: serverTimestamp()
+                });
+                
+                // Reset inputs
+                topicInput.value = "";
+                linkInput.value = "";
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Error: Could not add topic. Check console for details.");
+            } finally {
+                addBtn.textContent = "ADD TO LIST";
+                addBtn.disabled = false;
+            }
+        });
+
+        // --- 2. Listen for Realtime Updates ---
+        // We order by votes (descending) so the highest ranked items float to top
+        const q = query(topicsRef, orderBy("votes", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            loadingDiv.style.display = "none";
+            topicList.innerHTML = ""; // Clear current list
+
+            if (snapshot.empty) {
+                topicList.innerHTML = `<li style="text-align:center; color:#555;">No topics yet. Be the first!</li>`;
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const topic = docSnap.data();
+                const id = docSnap.id;
+                
+                // Create List Item
+                const li = document.createElement("li");
+                li.className = "topic-card";
+                
+                // Handle Link visibility
+                let linkHtml = "";
+                if (topic.url) {
+                    linkHtml = `
+                        <a href="${topic.url}" target="_blank" class="topic-link">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                            Reference Link
+                        </a>
+                    `;
+                }
+
+                li.innerHTML = `
+                    <div class="topic-content">
+                        <span class="topic-title">${escapeHtml(topic.title)}</span>
+                        ${linkHtml}
+                    </div>
+                    <div class="vote-box" id="vote-${id}">
+                        <div class="vote-arrow">▲</div>
+                        <span class="vote-count">${topic.votes}</span>
+                    </div>
+                `;
+
+                // Add click listener to vote
+                li.querySelector(".vote-box").addEventListener("click", () => handleVote(id));
+                
+                topicList.appendChild(li);
+            });
+        });
+
+        // --- 3. Handle Voting ---
+        async function handleVote(id) {
+            const box = document.getElementById(`vote-${id}`);
+            // Visual feedback immediately
+            box.style.transform = "scale(0.9)";
+            setTimeout(() => box.style.transform = "scale(1)", 150);
+
+            const topicDoc = doc(db, "topics", id);
+            try {
+                await updateDoc(topicDoc, {
+                    votes: increment(1)
+                });
+            } catch(e) {
+                console.error("Vote failed", e);
+                alert("Voting failed. Make sure database is in Test Mode.");
+            }
+        }
+
+        // Security Helper: Prevent HTML injection in topic titles
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
