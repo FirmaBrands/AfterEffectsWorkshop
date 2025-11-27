@@ -14,36 +14,60 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* --- THEME CONFIG --- */
+        /* --- 1. AMBIENT BACKGROUND ANIMATION --- */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #050508;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(56, 44, 133, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(68, 126, 247, 0.15) 0px, transparent 50%);
             color: #e2e8f0;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        .aurora-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #4f46e5; animation-delay: 0s; }
+        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #7c3aed; animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background: #2563eb; opacity: 0.2; animation-duration: 15s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
         }
 
         h1, h2, h3 { font-family: 'Outfit', sans-serif; }
 
-        /* Glassmorphism Panels */
+        /* Glassmorphism */
         .glass-panel {
-            background: rgba(30, 32, 45, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(20, 21, 31, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
         }
 
-        /* AE Gradient Text */
+        /* --- 2. STAGGERED ENTRANCE --- */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .list-card {
+            animation: slideUpFade 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0; /* Start hidden */
+        }
+
+        /* --- UI POLISH --- */
         .text-gradient {
             background: linear-gradient(135deg, #CF9FFF 0%, #5B7FFF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Submit Button Gradient */
         .btn-gradient {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -54,56 +78,44 @@
             box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
         }
 
-        /* Hover Effects */
-        .list-card { transition: transform 0.2s ease, border-color 0.2s ease; }
-        .list-card:hover { transform: scale(1.01); border-color: rgba(99, 102, 241, 0.3); }
-
-        /* --- VOTE BUTTON STATES --- */
+        /* Vote Button Logic */
         .vote-btn { transition: all 0.2s; cursor: pointer; }
-        
-        /* State: Has Voted (Green, Active) */
         .vote-btn.has-voted {
-            background-color: rgba(16, 185, 129, 0.15); /* Green tint */
+            background-color: rgba(16, 185, 129, 0.15);
             border-color: rgba(16, 185, 129, 0.5);
         }
-        .vote-btn.has-voted:hover {
-            background-color: rgba(16, 185, 129, 0.25);
-            border-color: rgba(16, 185, 129, 0.8);
-        }
-        .vote-btn.has-voted i { color: #34d399; } /* Green Icon */
-        .vote-btn.has-voted span { color: #34d399; }
+        .vote-btn.has-voted i, .vote-btn.has-voted span { color: #34d399; }
 
-        /* --- ADMIN VISIBILITY LOGIC --- */
-        /* By default, admin controls are HIDDEN */
+        /* Admin Controls */
         .admin-controls { display: none !important; }
         .admin-badge { display: none; }
-
-        /* When body has class 'is-admin', SHOW controls */
         body.is-admin .admin-controls { display: flex !important; }
         body.is-admin .admin-badge { display: inline-block; }
     </style>
 </head>
 <body class="min-h-screen pb-12 flex flex-col">
 
-    <div class="fixed inset-0 z-[-1] opacity-20" style="background-image: linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px); background-size: 40px 40px;"></div>
+    <div class="aurora-blob blob-1"></div>
+    <div class="aurora-blob blob-2"></div>
+    <div class="aurora-blob blob-3"></div>
 
-    <main class="max-w-3xl mx-auto px-4 pt-12 sm:pt-20 flex-grow w-full">
+    <main class="max-w-3xl mx-auto px-4 pt-12 sm:pt-20 flex-grow w-full relative z-10">
         
         <header class="text-center mb-12 relative">
-            <div class="inline-block mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-wider uppercase">
+            <div class="inline-block mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md">
                 Internal Workshop
             </div>
-            <div class="admin-badge absolute top-0 right-0 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/50 uppercase tracking-widest font-bold">Admin Mode</div>
+            <div class="admin-badge absolute top-0 right-0 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/50 uppercase tracking-widest font-bold backdrop-blur-md">Admin Mode</div>
             
-            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white mb-4">
+            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white mb-4 drop-shadow-lg">
                 <span class="text-gradient">Ae</span> Training
             </h1>
-            <p class="text-gray-400 text-lg sm:text-xl max-w-lg mx-auto leading-relaxed">
-                What do you want to learn? Add topics, drop reference links, and vote for the winners.
+            <p class="text-gray-300/80 text-lg sm:text-xl max-w-lg mx-auto leading-relaxed font-light">
+                Shape the agenda. Add topics, drop links, and vote for the winners.
             </p>
         </header>
 
-        <section class="glass-panel rounded-2xl p-1 mb-12 transform transition-all hover:shadow-2xl hover:shadow-indigo-500/10">
+        <section class="glass-panel rounded-2xl p-1 mb-12 transform transition-all hover:scale-[1.01] duration-500">
             <div class="p-6 sm:p-8">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="ph-bold ph-plus-circle text-indigo-400 text-xl"></i>
@@ -114,14 +126,14 @@
                     <div class="relative group">
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg opacity-30 blur group-focus-within:opacity-100 transition duration-500"></div>
                         <input type="text" id="topicInput" placeholder="e.g. Advanced Masking & Rotoscoping..." 
-                            class="relative w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg px-5 py-4 outline-none border border-gray-800 focus:border-transparent transition-all">
+                            class="relative w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg px-5 py-4 outline-none border border-gray-700/50 focus:border-indigo-500 transition-all focus:bg-[#1a1c26]">
                     </div>
 
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="relative flex-1">
                             <i class="ph ph-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
                             <input type="url" id="linkInput" placeholder="Reference URL (Optional)" 
-                                class="w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg pl-10 pr-5 py-3.5 outline-none border border-gray-800 focus:border-indigo-500/50 transition-all text-sm">
+                                class="w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg pl-10 pr-5 py-3.5 outline-none border border-gray-700/50 focus:border-indigo-500 transition-all text-sm focus:bg-[#1a1c26]">
                         </div>
                         <button id="addBtn" class="btn-gradient text-white font-bold py-3.5 px-8 rounded-lg shadow-lg flex items-center justify-center gap-2 sm:w-auto w-full">
                             <span>Submit</span>
@@ -137,7 +149,7 @@
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                     <i class="ph-fill ph-list-dashes text-indigo-500"></i> Request List
                 </h2>
-                <span class="text-xs font-medium text-gray-500 uppercase tracking-widest">Ranked by Interest</span>
+                <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Ranked by Interest</span>
             </div>
 
             <ul id="topicList" class="space-y-4 pb-10">
@@ -149,8 +161,8 @@
         </section>
     </main>
 
-    <footer class="text-center py-6 text-gray-700">
-        <button id="adminToggle" class="hover:text-gray-500 transition p-2" title="Admin Login">
+    <footer class="text-center py-6 text-gray-500 relative z-10">
+        <button id="adminToggle" class="hover:text-gray-300 transition p-2" title="Admin Login">
             <i class="ph-bold ph-lock-key"></i>
         </button>
     </footer>
@@ -172,19 +184,16 @@
         const db = getFirestore(app);
         const colRef = collection(db, 'topics');
 
-        // DOM Elements
         const topicInput = document.getElementById('topicInput');
         const linkInput = document.getElementById('linkInput');
         const addBtn = document.getElementById('addBtn');
         const topicList = document.getElementById('topicList');
         
-        // --- 1. LOCAL STORAGE (Spam Prevention) ---
         function getLocalVotes() {
             return JSON.parse(localStorage.getItem('ae_workshop_votes')) || [];
         }
 
-        // --- 2. ADMIN LOGIC ---
-        const SECRET_CODE = "motion"; // <--- CHANGE THIS PASSWORD
+        const SECRET_CODE = "motion"; 
         let isAdmin = false;
 
         document.getElementById('adminToggle').addEventListener('click', () => {
@@ -198,13 +207,10 @@
                     isAdmin = true;
                     document.body.classList.add('is-admin');
                     alert("Admin mode enabled!");
-                } else if (code !== null) {
-                    alert("Incorrect password.");
                 }
             }
         });
 
-        // --- 3. ADD TOPIC ---
         addBtn.addEventListener('click', async () => {
             const topicText = topicInput.value.trim();
             let linkText = linkInput.value.trim();
@@ -223,7 +229,6 @@
                 addBtn.disabled = true;
                 addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
                 
-                // Add to Firestore
                 const docRef = await addDoc(colRef, {
                     title: topicText,
                     link: linkText,
@@ -231,7 +236,6 @@
                     createdAt: serverTimestamp()
                 });
 
-                // Auto-vote for creator (Save to local storage)
                 const currentVotes = getLocalVotes();
                 currentVotes.push(docRef.id);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(currentVotes));
@@ -250,7 +254,7 @@
             }
         });
 
-        // --- 4. RENDER LIST ---
+        // --- RENDER LOGIC ---
         const q = query(colRef, orderBy("votes", "desc"));
 
         onSnapshot(q, (snapshot) => {
@@ -270,29 +274,41 @@
                 return;
             }
 
+            // --- 2. DATA VIZ LOGIC (Max Votes) ---
+            const maxVotes = topics[0].votes > 0 ? topics[0].votes : 1;
+
             topics.forEach((topic, index) => {
                 const li = document.createElement('li');
-                li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative";
+                // Added overflow-hidden for the progress bar
+                li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative overflow-hidden";
                 
-                // Rank Styling
+                // Add staggered animation delay based on index
+                li.style.animationDelay = `${index * 0.05}s`;
+
+                // --- 2. PROGRESS BAR (Background) ---
+                // Calculates width percentage relative to the top voted item
+                const progressWidth = (topic.votes / maxVotes) * 100;
+                const progressBar = `
+                    <div class="absolute top-0 bottom-0 left-0 bg-indigo-500/5 z-0 transition-all duration-1000 ease-out" style="width: ${progressWidth}%"></div>
+                `;
+
                 let rankColor = "text-gray-500";
                 if(index === 0) rankColor = "text-yellow-400";
                 if(index === 1) rankColor = "text-gray-300";
                 if(index === 2) rankColor = "text-orange-400";
 
                 const linkBadge = topic.link 
-                    ? `<a href="${topic.link}" target="_blank" class="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs rounded-full transition-colors" onclick="event.stopPropagation();">
+                    ? `<a href="${topic.link}" target="_blank" class="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs rounded-full transition-colors relative z-10" onclick="event.stopPropagation();">
                          <i class="ph-bold ph-link"></i> Reference
                        </a>` 
                     : '';
 
-                // Vote State
                 const hasVoted = myVotes.includes(topic.id);
                 const voteIcon = hasVoted ? "ph-check-fat" : "ph-caret-up";
                 const voteClass = hasVoted ? "has-voted" : "hover:bg-[#252836] hover:border-indigo-500/30 active:scale-95";
 
                 li.innerHTML = `
-                    <div class="flex items-start gap-4 flex-1 min-w-0">
+                    ${progressBar} <div class="flex items-start gap-4 flex-1 min-w-0 relative z-10">
                         <span class="text-xl font-black ${rankColor} opacity-50 font-mono mt-0.5 w-6 text-right">#${index + 1}</span>
                         <div class="flex-1 min-w-0">
                             <h3 class="text-lg font-medium text-gray-100 leading-tight break-words group-hover:text-white transition-colors">
@@ -302,20 +318,14 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 relative z-10">
                         <div class="admin-controls flex items-center gap-2 mr-2">
-                             <button class="edit-count-btn p-2 text-purple-400 hover:text-white bg-purple-500/10 hover:bg-purple-600 rounded-lg transition" title="Force Edit Vote Count" data-id="${topic.id}" data-votes="${topic.votes}">
-                                <i class="ph-bold ph-hash"></i>
-                            </button>
-                            <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" data-id="${topic.id}" data-title="${escapeHtml(topic.title)}" data-link="${escapeHtml(topic.link || '')}">
-                                <i class="ph-bold ph-pencil-simple"></i>
-                            </button>
-                            <button class="delete-btn p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg transition" data-id="${topic.id}">
-                                <i class="ph-bold ph-trash"></i>
-                            </button>
+                             <button class="edit-count-btn p-2 text-purple-400 hover:text-white bg-purple-500/10 hover:bg-purple-600 rounded-lg transition" title="Edit Votes" data-id="${topic.id}" data-votes="${topic.votes}"><i class="ph-bold ph-hash"></i></button>
+                            <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" data-id="${topic.id}" data-title="${escapeHtml(topic.title)}" data-link="${escapeHtml(topic.link || '')}"><i class="ph-bold ph-pencil-simple"></i></button>
+                            <button class="delete-btn p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg transition" data-id="${topic.id}"><i class="ph-bold ph-trash"></i></button>
                         </div>
 
-                        <button class="vote-btn ${voteClass} flex flex-col items-center justify-center bg-[#1a1c26] border border-gray-700 w-14 h-14 rounded-xl" data-id="${topic.id}">
+                        <button class="vote-btn ${voteClass} flex flex-col items-center justify-center bg-[#1a1c26]/80 backdrop-blur-sm border border-gray-700/50 w-14 h-14 rounded-xl" data-id="${topic.id}">
                             <i class="ph-bold ${voteIcon} text-indigo-400 text-lg mb-[-4px]"></i>
                             <span class="font-bold text-white text-sm">${topic.votes}</span>
                         </button>
@@ -328,7 +338,6 @@
         });
 
         function attachListeners() {
-            // Vote Toggle Logic
             document.querySelectorAll('.vote-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -337,7 +346,6 @@
                 });
             });
 
-            // Delete (Admin)
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
@@ -347,31 +355,25 @@
                 });
             });
 
-            // Edit Text (Admin)
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     const currentTitle = e.currentTarget.getAttribute('data-title').replace(/&quot;/g, '"').replace(/&amp;/g, '&'); 
                     const currentLink = e.currentTarget.getAttribute('data-link').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-
                     const newTitle = prompt("Edit Topic:", currentTitle);
                     if (newTitle === null) return; 
-
                     const newLink = prompt("Edit Link:", currentLink);
                     if (newLink === null) return; 
-
                     await updateDoc(doc(db, 'topics', id), { title: newTitle, link: newLink });
                 });
             });
 
-            // Edit VOTE COUNT (Admin)
             document.querySelectorAll('.edit-count-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     const currentVotes = e.currentTarget.getAttribute('data-votes');
-                    
                     const newCount = prompt("Manually set vote count:", currentVotes);
                     if (newCount !== null && !isNaN(newCount)) {
                          await updateDoc(doc(db, 'topics', id), { votes: parseInt(newCount) });
@@ -386,20 +388,12 @@
             const docRef = doc(db, 'topics', docId);
 
             if (hasVoted) {
-                // UN-VOTE
-                // 1. Update Local Storage FIRST to prevent UI lag
                 myVotes = myVotes.filter(id => id !== docId);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
-                
-                // 2. Update Firestore
                 await updateDoc(docRef, { votes: increment(-1) });
             } else {
-                // VOTE
-                // 1. Update Local Storage FIRST to prevent UI lag
                 myVotes.push(docId);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
-                
-                // 2. Update Firestore
                 await updateDoc(docRef, { votes: increment(1) });
             }
         }
