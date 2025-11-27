@@ -1,19 +1,179 @@
-Create a website for me that will be hosted on GitHub Pages.
-The goal: I am going to run an After Effects workshop for the company I work at, and I want users to vote on which topics interest them the most. Users should be able to add topics to the list and vote on other topics. The aim is to prioritize, so it would be great if we could create a list where users can rank what they want the most versus the least. Also users should be able to put links to refrences of stuff they want to make (which are clickable). it should be responsive on both web and mobile. after deveoping the base suggest features.  here is my firebase embed:
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AE Workshop: Topic Voting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e0e0e0; }
+        .glass-panel { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .ae-gradient { background: linear-gradient(135deg, #9999ff 0%, #0000ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-primary { background-color: #3b82f6; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .vote-btn:hover { color: #60a5fa; transform: scale(1.1); }
+        /* Animation for reordering */
+        .list-item { transition: all 0.5s ease; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
-  authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
-  projectId: "aftereffectsworkshop-ab75f",
-  storageBucket: "aftereffectsworkshop-ab75f.firebasestorage.app",
-  messagingSenderId: "522266658938",
-  appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
-};
+    <header class="w-full max-w-2xl mb-8 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold mb-2"><span class="ae-gradient">Ae</span> Workshop</h1>
+        <p class="text-gray-400 text-lg">Suggest topics, add references, and vote for what you want to learn.</p>
+    </header>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+    <div class="w-full max-w-2xl glass-panel rounded-xl p-6 mb-8 shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 text-white">Add a New Topic</h2>
+        <div class="flex flex-col gap-3">
+            <input type="text" id="topicInput" placeholder="E.g., Character Rigging, UI Animation..." class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition">
+            <input type="url" id="linkInput" placeholder="Reference Link (optional) - e.g., Pinterest/Youtube URL" class="w-full bg-[#2a2a2a] border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition">
+            <button id="addBtn" class="btn-primary text-white font-bold py-3 px-6 rounded-lg w-full sm:w-auto self-end mt-2">
+                Add Topic
+            </button>
+        </div>
+    </div>
+
+    <div class="w-full max-w-2xl">
+        <div class="flex justify-between items-end mb-4 px-2">
+            <h2 class="text-xl font-semibold text-white">Ranked Topics</h2>
+            <span class="text-sm text-gray-500">Sorted by popularity</span>
+        </div>
+        <ul id="topicList" class="space-y-3">
+            <li class="text-center text-gray-500 py-8 animate-pulse">Loading suggestions...</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
+            authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
+            projectId: "aftereffectsworkshop-ab75f",
+            storageBucket: "aftereffectsworkshop-ab75f.firebasestorage.app",
+            messagingSenderId: "522266658938",
+            appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
+        };
+
+        // Initialize
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colRef = collection(db, 'topics');
+
+        // DOM Elements
+        const topicInput = document.getElementById('topicInput');
+        const linkInput = document.getElementById('linkInput');
+        const addBtn = document.getElementById('addBtn');
+        const topicList = document.getElementById('topicList');
+
+        // --- ADD TOPIC FUNCTION ---
+        addBtn.addEventListener('click', async () => {
+            const topicText = topicInput.value.trim();
+            const linkText = linkInput.value.trim();
+
+            if (!topicText) {
+                alert("Please enter a topic name.");
+                return;
+            }
+
+            try {
+                addBtn.disabled = true;
+                addBtn.innerText = "Adding...";
+                
+                await addDoc(colRef, {
+                    title: topicText,
+                    link: linkText,
+                    votes: 0,
+                    createdAt: serverTimestamp()
+                });
+
+                // Clear inputs
+                topicInput.value = '';
+                linkInput.value = '';
+            } catch (err) {
+                console.error(err);
+                alert("Error adding topic. Check console.");
+            } finally {
+                addBtn.disabled = false;
+                addBtn.innerText = "Add Topic";
+            }
+        });
+
+        // --- REALTIME RENDER & SORTING ---
+        // We order by votes (descending) to achieve the "Ranking" effect
+        const q = query(colRef, orderBy("votes", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            topicList.innerHTML = '';
+            
+            const topics = [];
+            snapshot.docs.forEach(doc => {
+                topics.push({ ...doc.data(), id: doc.id });
+            });
+
+            if(topics.length === 0) {
+                topicList.innerHTML = `<li class="text-center text-gray-500 py-4">No topics yet. Be the first!</li>`;
+                return;
+            }
+
+            topics.forEach(topic => {
+                const li = document.createElement('li');
+                li.className = "list-item glass-panel p-4 rounded-lg flex items-center justify-between gap-4";
+                
+                // Check if link exists
+                const linkHtml = topic.link 
+                    ? `<a href="${topic.link}" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline mt-1 block truncate max-w-[200px]">View Reference ↗</a>` 
+                    : '';
+
+                li.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-medium text-white break-words">${escapeHtml(topic.title)}</h3>
+                        ${linkHtml}
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl font-bold text-gray-300 w-8 text-center">${topic.votes}</span>
+                        <button class="vote-btn bg-[#2a2a2a] hover:bg-[#333] border border-gray-600 rounded-full p-2 transition cursor-pointer" data-id="${topic.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                topicList.appendChild(li);
+            });
+
+            // Attach event listeners to new buttons
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Prevent accidental double clicks visually or rapid fire
+                    const id = e.currentTarget.getAttribute('data-id');
+                    handleVote(id);
+                });
+            });
+        });
+
+        // --- VOTE FUNCTION ---
+        async function handleVote(docId) {
+            const docRef = doc(db, 'topics', docId);
+            await updateDoc(docRef, {
+                votes: increment(1)
+            });
+        }
+
+        // Basic HTML escape to prevent XSS
+        function escapeHtml(text) {
+            if(!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
