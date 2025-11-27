@@ -59,13 +59,16 @@
         .list-card:hover { transform: scale(1.01); border-color: rgba(99, 102, 241, 0.3); }
 
         /* --- VOTE BUTTON STATES --- */
-        .vote-btn { transition: all 0.2s; }
+        .vote-btn { transition: all 0.2s; cursor: pointer; }
         
-        /* State: Has Voted (Green, Disabled) */
+        /* State: Has Voted (Green, Active) */
         .vote-btn.has-voted {
-            background-color: rgba(16, 185, 129, 0.2); /* Green tint */
+            background-color: rgba(16, 185, 129, 0.15); /* Green tint */
             border-color: rgba(16, 185, 129, 0.5);
-            cursor: default;
+        }
+        .vote-btn.has-voted:hover {
+            background-color: rgba(16, 185, 129, 0.25);
+            border-color: rgba(16, 185, 129, 0.8);
         }
         .vote-btn.has-voted i { color: #34d399; } /* Green Icon */
         .vote-btn.has-voted span { color: #34d399; }
@@ -176,7 +179,6 @@
         const topicList = document.getElementById('topicList');
         
         // --- 1. LOCAL STORAGE (Spam Prevention) ---
-        // We retrieve the list of IDs the user has already voted for
         function getLocalVotes() {
             return JSON.parse(localStorage.getItem('ae_workshop_votes')) || [];
         }
@@ -221,15 +223,14 @@
                 addBtn.disabled = true;
                 addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
                 
-                // Add to Firestore
                 const docRef = await addDoc(colRef, {
                     title: topicText,
                     link: linkText,
-                    votes: 1, // Creator gets first vote automatically
+                    votes: 1, 
                     createdAt: serverTimestamp()
                 });
 
-                // Automatically mark as voted in local storage so creator can't double dip immediately
+                // Auto-vote for creator
                 const currentVotes = getLocalVotes();
                 currentVotes.push(docRef.id);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(currentVotes));
@@ -257,7 +258,6 @@
             const topics = [];
             snapshot.docs.forEach(doc => topics.push({ ...doc.data(), id: doc.id }));
             
-            // Get local votes to check status for each item
             const myVotes = getLocalVotes();
 
             if(topics.length === 0) {
@@ -273,7 +273,7 @@
                 const li = document.createElement('li');
                 li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative";
                 
-                // Styling for Rank 1, 2, 3
+                // Rank Styling
                 let rankColor = "text-gray-500";
                 if(index === 0) rankColor = "text-yellow-400";
                 if(index === 1) rankColor = "text-gray-300";
@@ -285,7 +285,7 @@
                        </a>` 
                     : '';
 
-                // Check if user voted for this specific topic
+                // Vote State
                 const hasVoted = myVotes.includes(topic.id);
                 const voteIcon = hasVoted ? "ph-check-fat" : "ph-caret-up";
                 const voteClass = hasVoted ? "has-voted" : "hover:bg-[#252836] hover:border-indigo-500/30 active:scale-95";
@@ -303,6 +303,9 @@
                     
                     <div class="flex items-center gap-3">
                         <div class="admin-controls flex items-center gap-2 mr-2">
+                             <button class="edit-count-btn p-2 text-purple-400 hover:text-white bg-purple-500/10 hover:bg-purple-600 rounded-lg transition" title="Force Edit Vote Count" data-id="${topic.id}" data-votes="${topic.votes}">
+                                <i class="ph-bold ph-hash"></i>
+                            </button>
                             <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" data-id="${topic.id}" data-title="${escapeHtml(topic.title)}" data-link="${escapeHtml(topic.link || '')}">
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>
@@ -324,37 +327,26 @@
         });
 
         function attachListeners() {
-            // Vote Listener
+            // Vote Toggle Logic
             document.querySelectorAll('.vote-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Stop click from triggering parent
+                    e.stopPropagation();
                     const id = e.currentTarget.getAttribute('data-id');
-                    
-                    // Check local storage again just to be safe
-                    const myVotes = getLocalVotes();
-                    if(myVotes.includes(id)) {
-                        // Optional: Small shake animation to say "No"
-                        e.currentTarget.classList.add('animate-pulse');
-                        setTimeout(() => e.currentTarget.classList.remove('animate-pulse'), 500);
-                        return; // Stop execution
-                    }
-
-                    handleVote(id);
+                    toggleVote(id);
                 });
             });
 
-            // Delete Listener (Admin)
+            // Delete (Admin)
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
                     if(confirm("Delete this topic?")) {
-                        const id = e.currentTarget.getAttribute('data-id');
-                        await deleteDoc(doc(db, 'topics', id));
+                        await deleteDoc(doc(db, 'topics', e.currentTarget.getAttribute('data-id')));
                     }
                 });
             });
 
-            // Edit Listener (Admin)
+            // Edit Text (Admin)
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
@@ -368,25 +360,43 @@
                     const newLink = prompt("Edit Link:", currentLink);
                     if (newLink === null) return; 
 
-                    await updateDoc(doc(db, 'topics', id), {
-                        title: newTitle,
-                        link: newLink
-                    });
+                    await updateDoc(doc(db, 'topics', id), { title: newTitle, link: newLink });
+                });
+            });
+
+            // Edit VOTE COUNT (Admin)
+            document.querySelectorAll('.edit-count-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if(!isAdmin) return;
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const currentVotes = e.currentTarget.getAttribute('data-votes');
+                    
+                    const newCount = prompt("Manually set vote count:", currentVotes);
+                    if (newCount !== null && !isNaN(newCount)) {
+                         await updateDoc(doc(db, 'topics', id), { votes: parseInt(newCount) });
+                    }
                 });
             });
         }
 
-        async function handleVote(docId) {
-            // 1. Update Firestore
-            const docRef = doc(db, 'topics', docId);
-            await updateDoc(docRef, { votes: increment(1) });
-            
-            // 2. Update Local Storage
+        async function toggleVote(docId) {
             const myVotes = getLocalVotes();
-            myVotes.push(docId);
-            localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
-            
-            // Note: The onSnapshot listener handles the UI update automatically
+            const hasVoted = myVotes.includes(docId);
+            const docRef = doc(db, 'topics', docId);
+
+            if (hasVoted) {
+                // UN-VOTE
+                await updateDoc(docRef, { votes: increment(-1) });
+                // Remove from local storage
+                const newVotes = myVotes.filter(id => id !== docId);
+                localStorage.setItem('ae_workshop_votes', JSON.stringify(newVotes));
+            } else {
+                // VOTE
+                await updateDoc(docRef, { votes: increment(1) });
+                // Add to local storage
+                myVotes.push(docId);
+                localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
+            }
         }
 
         function escapeHtml(text) {
