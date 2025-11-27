@@ -223,6 +223,7 @@
                 addBtn.disabled = true;
                 addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
                 
+                // Add to Firestore
                 const docRef = await addDoc(colRef, {
                     title: topicText,
                     link: linkText,
@@ -230,7 +231,7 @@
                     createdAt: serverTimestamp()
                 });
 
-                // Auto-vote for creator
+                // Auto-vote for creator (Save to local storage)
                 const currentVotes = getLocalVotes();
                 currentVotes.push(docRef.id);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(currentVotes));
@@ -380,22 +381,26 @@
         }
 
         async function toggleVote(docId) {
-            const myVotes = getLocalVotes();
+            let myVotes = getLocalVotes();
             const hasVoted = myVotes.includes(docId);
             const docRef = doc(db, 'topics', docId);
 
             if (hasVoted) {
                 // UN-VOTE
+                // 1. Update Local Storage FIRST to prevent UI lag
+                myVotes = myVotes.filter(id => id !== docId);
+                localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
+                
+                // 2. Update Firestore
                 await updateDoc(docRef, { votes: increment(-1) });
-                // Remove from local storage
-                const newVotes = myVotes.filter(id => id !== docId);
-                localStorage.setItem('ae_workshop_votes', JSON.stringify(newVotes));
             } else {
                 // VOTE
-                await updateDoc(docRef, { votes: increment(1) });
-                // Add to local storage
+                // 1. Update Local Storage FIRST to prevent UI lag
                 myVotes.push(docId);
                 localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
+                
+                // 2. Update Firestore
+                await updateDoc(docRef, { votes: increment(1) });
             }
         }
 
