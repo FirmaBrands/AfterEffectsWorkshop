@@ -1,414 +1,363 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AE Workshop Voting</title>
-    <style>
-        :root {
-            /* After Effects Inspired Theme */
-            --bg-color: #161616;
-            --card-bg: #232323;
-            --ae-purple: #D3A7FF; /* Light Purple for text/accents */
-            --ae-dark-purple: #38285c; /* Dark Purple for backgrounds */
-            --text-main: #f0f0f0;
-            --text-muted: #888888;
-            --border-color: #333333;
-        }
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { 
+  getAuth, 
+  signInAnonymously, 
+  onAuthStateChanged,
+  signInWithCustomToken
+} from "firebase/auth";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  onSnapshot, 
+  arrayUnion, 
+  arrayRemove,
+  serverTimestamp 
+} from "firebase/firestore";
+import { 
+  ThumbsUp, 
+  Link as LinkIcon, 
+  Plus, 
+  Trash2, 
+  ExternalLink,
+  Layers,
+  Sparkles,
+  Zap
+} from 'lucide-react';
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
+// --- FIREBASE CONFIGURATION ---
+const firebaseConfig = {
+  apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
+  authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
+  projectId: "aftereffectsworkshop-ab75f",
+  storageBucket: "aftereffectsworkshop-ab75f.firebasestorage.app",
+  messagingSenderId: "522266658938",
+  appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
+};
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
+// Initialize Firebase outside component to avoid re-initialization
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        /* Header */
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--ae-purple);
-            padding-bottom: 20px;
-        }
+// Use the environment variable for App ID, or fallback for safety
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'ae-workshop-default';
 
-        h1 {
-            margin: 0;
-            color: var(--ae-purple);
-            font-size: 2rem;
-            letter-spacing: -0.5px;
-        }
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [topics, setTopics] = useState([]);
+  const [newTopic, setNewTopic] = useState("");
+  const [newLink, setNewLink] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-        p.subtitle {
-            color: var(--text-muted);
-            margin-top: 5px;
-            font-size: 0.9rem;
+  // --- AUTHENTICATION ---
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
         }
+      } catch (err) {
+        console.error("Auth error:", err);
+        setError("Could not sign in. Please refresh.");
+      }
+    };
 
-        /* Input Section */
-        .input-group {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
-        label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: -5px;
-        }
+  // --- DATA FETCHING ---
+  useEffect(() => {
+    if (!user) return;
 
-        input {
-            padding: 12px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background: #121212;
-            color: white;
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
+    // PATH RULE: /artifacts/{appId}/public/data/topics
+    // Using public collection so everyone can see and vote
+    const topicsRef = collection(db, 'artifacts', appId, 'public', 'data', 'workshop_topics');
 
-        input:focus {
-            outline: none;
-            border-color: var(--ae-purple);
-        }
-
-        button#add-btn {
-            background: var(--ae-purple);
-            color: #1a0b2e;
-            font-weight: 800;
-            border: none;
-            padding: 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: opacity 0.2s, transform 0.1s;
-        }
-
-        button#add-btn:hover {
-            opacity: 0.9;
-        }
-
-        button#add-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Topics List */
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .topic-card {
-            background: var(--card-bg);
-            margin-bottom: 12px;
-            padding: 15px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .topic-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            border-color: #555;
-        }
-
-        /* The purple progress bar effect on the left */
-        .topic-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background-color: var(--ae-purple);
-            opacity: 0.5;
-        }
-
-        .topic-content {
-            flex-grow: 1;
-            margin-right: 15px;
-            overflow: hidden; /* prevents long text breaking layout */
-        }
-
-        .topic-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .topic-link {
-            font-size: 0.8rem;
-            color: var(--ae-purple);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-
-        .topic-link:hover {
-            opacity: 1;
-            text-decoration: underline;
-        }
-
-        /* Vote Button Area */
-        .vote-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #2a2a2a;
-            padding: 8px 12px;
-            border-radius: 6px;
-            min-width: 45px;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            transition: background 0.2s;
-            user-select: none;
-        }
-
-        .vote-box:hover {
-            background: #333;
-            border-color: var(--ae-purple);
-        }
-
-        .vote-box:active {
-            background: var(--ae-purple);
-        }
+    // QUERY RULE: No complex queries (orderBy/limit) in Firestore. Sort in JS.
+    const unsubscribe = onSnapshot(topicsRef, 
+      (snapshot) => {
+        const loadedTopics = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         
-        .vote-box:active .vote-count, 
-        .vote-box:active .vote-arrow {
-            color: #000;
-        }
+        // Client-side sorting: Most votes first, then newest
+        loadedTopics.sort((a, b) => {
+          const votesA = a.votes ? a.votes.length : 0;
+          const votesB = b.votes ? b.votes.length : 0;
+          if (votesB !== votesA) return votesB - votesA;
+          // If votes are equal, show newest first (using seconds if available)
+          return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+        });
 
-        .vote-arrow {
-            font-size: 1.2rem;
-            color: var(--ae-purple);
-            line-height: 1;
-            margin-bottom: 2px;
-        }
+        setTopics(loadedTopics);
+      },
+      (err) => {
+        console.error("Data fetch error:", err);
+        setError("Failed to load topics. Check connection.");
+      }
+    );
 
-        .vote-count {
-            font-size: 1rem;
-            font-weight: bold;
-            color: white;
-        }
+    return () => unsubscribe();
+  }, [user]);
 
-        /* Utility */
-        .loading {
-            text-align: center;
-            color: var(--text-muted);
-            margin-top: 40px;
-            font-style: italic;
-        }
+  // --- ACTIONS ---
 
-        /* Mobile Adjustments */
-        @media (max-width: 480px) {
-            .topic-card {
-                padding: 12px;
-            }
-            .topic-title {
-                font-size: 1rem;
-            }
-            h1 { font-size: 1.5rem; }
-        }
-    </style>
-</head>
-<body>
+  const handleAddTopic = async (e) => {
+    e.preventDefault();
+    if (!newTopic.trim()) return;
+    setIsSubmitting(true);
+    setError("");
 
-    <div class="container">
-        <header>
-            <h1>AE Workshop Topics</h1>
-            <p class="subtitle">Suggest topics and vote up your favorites.</p>
-        </header>
+    try {
+      const topicData = {
+        title: newTopic.trim(),
+        link: newLink.trim(),
+        votes: [user.uid], // Creator automatically votes for it
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+        authorName: "Anonymous Animator" // Could be enhanced with real profiles later
+      };
 
-        <div class="input-group">
-            <label for="topicInput">Topic Name</label>
-            <input type="text" id="topicInput" placeholder="e.g. 3D Camera Tracking" autocomplete="off">
-            
-            <label for="linkInput">Reference Link (Optional)</label>
-            <input type="url" id="linkInput" placeholder="https://..." autocomplete="off">
-            
-            <button id="add-btn">Add to List</button>
+      const topicsRef = collection(db, 'artifacts', appId, 'public', 'data', 'workshop_topics');
+      await addDoc(topicsRef, topicData);
+
+      setNewTopic("");
+      setNewLink("");
+    } catch (err) {
+      console.error("Add topic error:", err);
+      setError("Failed to add topic.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleVote = async (topicId, currentVotes) => {
+    if (!user) return;
+    
+    const topicRef = doc(db, 'artifacts', appId, 'public', 'data', 'workshop_topics', topicId);
+    const hasVoted = currentVotes.includes(user.uid);
+
+    try {
+      if (hasVoted) {
+        await updateDoc(topicRef, {
+          votes: arrayRemove(user.uid)
+        });
+      } else {
+        await updateDoc(topicRef, {
+          votes: arrayUnion(user.uid)
+        });
+      }
+    } catch (err) {
+      console.error("Voting error:", err);
+    }
+  };
+
+  const deleteTopic = async (topicId) => {
+    if (!window.confirm("Delete this topic?")) return;
+    try {
+      const topicRef = doc(db, 'artifacts', appId, 'public', 'data', 'workshop_topics', topicId);
+      await deleteDoc(topicRef);
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  // Helper to ensure link has protocol
+  const formatLink = (url) => {
+    if (!url) return null;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return `https://${url}`;
+    }
+    return url;
+  };
+
+  // --- RENDER ---
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#1F1F28] flex items-center justify-center text-purple-200">
+        <div className="animate-pulse flex flex-col items-center">
+          <Layers className="w-12 h-12 mb-4 text-purple-500" />
+          <p>Initializing AE Workshop...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#121216] text-gray-200 font-sans selection:bg-purple-500 selection:text-white">
+      {/* Header */}
+      <header className="bg-[#1F1F28] border-b border-[#2D2D3A] sticky top-0 z-10 shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-2 rounded-lg shadow-purple-900/50 shadow-lg">
+              <Layers className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
+              AE Workshop
+            </h1>
+          </div>
+          <div className="text-xs text-gray-500 font-mono">
+            ID: {user.uid.slice(0,6)}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        
+        {/* Intro Text */}
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">What should we learn?</h2>
+          <p className="text-gray-400 max-w-lg mx-auto">
+            Vote for your favorite After Effects techniques, plugins, or styles. 
+            The topics with the most upvotes will be covered in the workshop.
+          </p>
         </div>
 
-        <div id="loading" class="loading">Connecting to database...</div>
-        <ul id="topicList"></ul>
-    </div>
+        {/* Input Form */}
+        <div className="bg-[#1F1F28] rounded-xl p-6 border border-[#2D2D3A] shadow-2xl">
+          <form onSubmit={handleAddTopic} className="space-y-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-purple-400 font-semibold mb-1 ml-1">Topic</label>
+              <input
+                type="text"
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                placeholder="e.g. 3D Camera Tracking, Text Animators..."
+                className="w-full bg-[#121216] border border-[#2D2D3A] rounded-lg p-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1 ml-1">Reference Link (Optional)</label>
+              <div className="relative">
+                <LinkIcon className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  placeholder="https://vimeo.com/..."
+                  className="w-full bg-[#121216] border border-[#2D2D3A] rounded-lg p-3 pl-10 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                />
+              </div>
+            </div>
 
-    <!-- Firebase Configuration and Logic -->
-    <script type="module">
-        // Import Firebase from CDN (Web Version)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, increment, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting || !newTopic.trim()}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-lg shadow-purple-900/20"
+              >
+                <Plus className="w-5 h-5" />
+                Add Topic
+              </button>
+            </div>
+          </form>
+          {error && <p className="text-red-400 text-sm mt-3 text-center">{error}</p>}
+        </div>
 
-        // Your exact configuration keys
-        const firebaseConfig = {
-            apiKey: "AIzaSyAubPtprKuQ_ky5AAboUbZHtu4AFbNVHqA",
-            authDomain: "ae-workshop.firebaseapp.com",
-            projectId: "ae-workshop",
-            storageBucket: "ae-workshop.firebasestorage.app",
-            messagingSenderId: "996938664906",
-            appId: "1:996938664906:web:cc1277c3a33f0d93e59d33"
-        };
+        {/* List of Topics */}
+        <div className="space-y-4 pb-12">
+          {topics.length === 0 ? (
+            <div className="text-center py-12 opacity-50">
+              <Sparkles className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+              <p className="text-gray-400">No topics yet. Be the first to suggest one!</p>
+            </div>
+          ) : (
+            topics.map((topic, index) => {
+              const voteCount = topic.votes ? topic.votes.length : 0;
+              const hasVoted = topic.votes && topic.votes.includes(user.uid);
+              const isCreator = topic.createdBy === user.uid;
+              const formattedLink = formatLink(topic.link);
 
-        // Initialize
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const topicsRef = collection(db, "topics");
+              return (
+                <div 
+                  key={topic.id}
+                  className={`group relative bg-[#1F1F28] rounded-xl p-4 border transition-all duration-300 flex gap-4 ${
+                    hasVoted 
+                      ? 'border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]' 
+                      : 'border-[#2D2D3A] hover:border-[#3D3D4D]'
+                  }`}
+                >
+                  {/* Rank Badge */}
+                  <div className="absolute -left-2 -top-2 w-6 h-6 bg-[#2D2D3A] text-gray-400 rounded-full flex items-center justify-center text-xs font-bold border border-[#121216]">
+                    #{index + 1}
+                  </div>
 
-        // DOM Elements
-        const topicInput = document.getElementById("topicInput");
-        const linkInput = document.getElementById("linkInput");
-        const addBtn = document.getElementById("add-btn");
-        const topicList = document.getElementById("topicList");
-        const loadingDiv = document.getElementById("loading");
+                  {/* Vote Button */}
+                  <div className="flex flex-col items-center justify-center min-w-[3rem]">
+                    <button
+                      onClick={() => toggleVote(topic.id, topic.votes || [])}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                        hasVoted 
+                          ? 'text-purple-400 bg-purple-500/10' 
+                          : 'text-gray-500 hover:text-gray-300 hover:bg-[#2D2D3A]'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-6 h-6 ${hasVoted ? 'fill-current' : ''}`} />
+                      <span className="text-sm font-bold">{voteCount}</span>
+                    </button>
+                  </div>
 
-        // --- 1. Add New Topic ---
-        addBtn.addEventListener("click", async () => {
-            const text = topicInput.value.trim();
-            let link = linkInput.value.trim();
-
-            if (!text) {
-                alert("Please enter a topic name.");
-                return;
-            }
-
-            // Simple check to ensure link has http/https if user forgot it
-            if (link && !link.startsWith('http')) {
-                link = 'https://' + link;
-            }
-
-            // Disable button temporarily
-            addBtn.textContent = "Adding...";
-            addBtn.disabled = true;
-
-            try {
-                await addDoc(topicsRef, {
-                    title: text,
-                    url: link,
-                    votes: 1, // Starter vote for the creator
-                    createdAt: serverTimestamp()
-                });
-                
-                // Reset inputs
-                topicInput.value = "";
-                linkInput.value = "";
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                alert("Error: Could not add topic. Check console for details.");
-            } finally {
-                addBtn.textContent = "ADD TO LIST";
-                addBtn.disabled = false;
-            }
-        });
-
-        // --- 2. Listen for Realtime Updates ---
-        // We order by votes (descending) so the highest ranked items float to top
-        const q = query(topicsRef, orderBy("votes", "desc"));
-
-        onSnapshot(q, (snapshot) => {
-            loadingDiv.style.display = "none";
-            topicList.innerHTML = ""; // Clear current list
-
-            if (snapshot.empty) {
-                topicList.innerHTML = `<li style="text-align:center; color:#555;">No topics yet. Be the first!</li>`;
-                return;
-            }
-
-            snapshot.forEach((docSnap) => {
-                const topic = docSnap.data();
-                const id = docSnap.id;
-                
-                // Create List Item
-                const li = document.createElement("li");
-                li.className = "topic-card";
-                
-                // Handle Link visibility
-                let linkHtml = "";
-                if (topic.url) {
-                    linkHtml = `
-                        <a href="${topic.url}" target="_blank" class="topic-link">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                <polyline points="15 3 21 3 21 9"></polyline>
-                                <line x1="10" y1="14" x2="21" y2="3"></line>
-                            </svg>
-                            Reference Link
+                  {/* Content */}
+                  <div className="flex-1 flex flex-col justify-center min-w-0">
+                    <h3 className="text-lg font-medium text-gray-100 break-words leading-tight">
+                      {topic.title}
+                    </h3>
+                    
+                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                      {formattedLink && (
+                        <a 
+                          href={formattedLink}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Reference
                         </a>
-                    `;
-                }
-
-                li.innerHTML = `
-                    <div class="topic-content">
-                        <span class="topic-title">${escapeHtml(topic.title)}</span>
-                        ${linkHtml}
+                      )}
+                      
+                      {/* Optional metadata showing date */}
+                      <span className="text-xs text-gray-600">
+                         {topic.createdAt ? 'Added recently' : ''}
+                      </span>
                     </div>
-                    <div class="vote-box" id="vote-${id}">
-                        <div class="vote-arrow">▲</div>
-                        <span class="vote-count">${topic.votes}</span>
-                    </div>
-                `;
+                  </div>
 
-                // Add click listener to vote
-                li.querySelector(".vote-box").addEventListener("click", () => handleVote(id));
-                
-                topicList.appendChild(li);
-            });
-        });
-
-        // --- 3. Handle Voting ---
-        async function handleVote(id) {
-            const box = document.getElementById(`vote-${id}`);
-            // Visual feedback immediately
-            box.style.transform = "scale(0.9)";
-            setTimeout(() => box.style.transform = "scale(1)", 150);
-
-            const topicDoc = doc(db, "topics", id);
-            try {
-                await updateDoc(topicDoc, {
-                    votes: increment(1)
-                });
-            } catch(e) {
-                console.error("Vote failed", e);
-                alert("Voting failed. Make sure database is in Test Mode.");
-            }
-        }
-
-        // Security Helper: Prevent HTML injection in topic titles
-        function escapeHtml(text) {
-            if (!text) return text;
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-    </script>
-</body>
-</html>
+                  {/* Delete (Only for creator) */}
+                  {isCreator && (
+                    <button
+                      onClick={() => deleteTopic(topic.id)}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-600 hover:text-red-400 transition-opacity p-2 self-start"
+                      title="Delete topic"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </main>
+      
+      {/* Footer decorator */}
+      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 opacity-50" />
+    </div>
+  );
+}
