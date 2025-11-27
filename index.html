@@ -14,7 +14,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        /* Custom Base Styles */
+        /* --- THEME CONFIG --- */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #050508;
@@ -34,29 +34,16 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
         }
 
-        /* Completed State */
-        .card-completed {
-            opacity: 0.5;
-            filter: grayscale(100%);
-            border-color: rgba(255,255,255,0.05);
-            background: rgba(20, 20, 25, 0.4);
-        }
-        .card-completed:hover {
-            opacity: 0.8;
-            filter: grayscale(0%);
-        }
-
-        /* The "AE" Gradient Text */
+        /* AE Gradient Text */
         .text-gradient {
             background: linear-gradient(135deg, #CF9FFF 0%, #5B7FFF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* Button Gradient */
+        /* Submit Button Gradient */
         .btn-gradient {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -67,22 +54,29 @@
             box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
         }
 
-        /* Voted State Button */
-        .btn-voted {
-            background: #4f46e5 !important;
-            border-color: #4f46e5 !important;
-            color: white !important;
-            cursor: default !important;
-            transform: none !important;
-        }
-        .btn-voted i { color: white !important; }
+        /* Hover Effects */
+        .list-card { transition: transform 0.2s ease, border-color 0.2s ease; }
+        .list-card:hover { transform: scale(1.01); border-color: rgba(99, 102, 241, 0.3); }
 
-        /* Admin Controls Hidden by default */
-        .admin-controls { display: none; }
-        body.is-admin .admin-controls { display: flex; }
+        /* --- VOTE BUTTON STATES --- */
+        .vote-btn { transition: all 0.2s; }
         
-        /* Admin Badge */
+        /* State: Has Voted (Green, Disabled) */
+        .vote-btn.has-voted {
+            background-color: rgba(16, 185, 129, 0.2); /* Green tint */
+            border-color: rgba(16, 185, 129, 0.5);
+            cursor: default;
+        }
+        .vote-btn.has-voted i { color: #34d399; } /* Green Icon */
+        .vote-btn.has-voted span { color: #34d399; }
+
+        /* --- ADMIN VISIBILITY LOGIC --- */
+        /* By default, admin controls are HIDDEN */
+        .admin-controls { display: none !important; }
         .admin-badge { display: none; }
+
+        /* When body has class 'is-admin', SHOW controls */
+        body.is-admin .admin-controls { display: flex !important; }
         body.is-admin .admin-badge { display: inline-block; }
     </style>
 </head>
@@ -94,11 +88,9 @@
         
         <header class="text-center mb-12 relative">
             <div class="inline-block mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-wider uppercase">
-                Company Workshop
+                Internal Workshop
             </div>
-            <div class="admin-badge absolute top-0 right-0 px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded border border-red-500/30 font-mono">
-                <i class="ph-bold ph-lock-open"></i> ADMIN
-            </div>
+            <div class="admin-badge absolute top-0 right-0 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/50 uppercase tracking-widest font-bold">Admin Mode</div>
             
             <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white mb-4">
                 <span class="text-gradient">Ae</span> Training
@@ -142,9 +134,7 @@
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                     <i class="ph-fill ph-list-dashes text-indigo-500"></i> Request List
                 </h2>
-                <div class="text-right">
-                    <span class="text-xs font-medium text-gray-500 uppercase tracking-widest block">Ranked by Interest</span>
-                </div>
+                <span class="text-xs font-medium text-gray-500 uppercase tracking-widest">Ranked by Interest</span>
             </div>
 
             <ul id="topicList" class="space-y-4 pb-10">
@@ -154,11 +144,10 @@
                 </li>
             </ul>
         </section>
-
     </main>
 
     <footer class="text-center py-6 text-gray-700">
-        <button id="adminToggle" class="hover:text-gray-500 transition p-2">
+        <button id="adminToggle" class="hover:text-gray-500 transition p-2" title="Admin Login">
             <i class="ph-bold ph-lock-key"></i>
         </button>
     </footer>
@@ -180,36 +169,40 @@
         const db = getFirestore(app);
         const colRef = collection(db, 'topics');
 
+        // DOM Elements
         const topicInput = document.getElementById('topicInput');
         const linkInput = document.getElementById('linkInput');
         const addBtn = document.getElementById('addBtn');
         const topicList = document.getElementById('topicList');
         
-        // --- LOCAL STORAGE (Vote Tracking) ---
-        // We store an array of IDs the user has voted on: ['docID1', 'docID2']
-        const localVotes = JSON.parse(localStorage.getItem('ae_workshop_votes')) || [];
+        // --- 1. LOCAL STORAGE (Spam Prevention) ---
+        // We retrieve the list of IDs the user has already voted for
+        function getLocalVotes() {
+            return JSON.parse(localStorage.getItem('ae_workshop_votes')) || [];
+        }
 
-        // --- ADMIN LOGIC ---
-        const SECRET_CODE = "motion"; 
+        // --- 2. ADMIN LOGIC ---
+        const SECRET_CODE = "motion"; // <--- CHANGE THIS PASSWORD
         let isAdmin = false;
 
         document.getElementById('adminToggle').addEventListener('click', () => {
             if(isAdmin) {
                 isAdmin = false;
                 document.body.classList.remove('is-admin');
-                return;
-            }
-
-            const code = prompt("Enter Admin Password:");
-            if(code === SECRET_CODE) {
-                isAdmin = true;
-                document.body.classList.add('is-admin');
-            } else if (code !== null) {
-                alert("Incorrect password.");
+                alert("Admin mode disabled");
+            } else {
+                const code = prompt("Enter Admin Password:");
+                if(code === SECRET_CODE) {
+                    isAdmin = true;
+                    document.body.classList.add('is-admin');
+                    alert("Admin mode enabled!");
+                } else if (code !== null) {
+                    alert("Incorrect password.");
+                }
             }
         });
 
-        // --- Add Topic ---
+        // --- 3. ADD TOPIC ---
         addBtn.addEventListener('click', async () => {
             const topicText = topicInput.value.trim();
             let linkText = linkInput.value.trim();
@@ -228,13 +221,18 @@
                 addBtn.disabled = true;
                 addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
                 
-                await addDoc(colRef, {
+                // Add to Firestore
+                const docRef = await addDoc(colRef, {
                     title: topicText,
                     link: linkText,
-                    votes: 0,
-                    completed: false, // New Field
+                    votes: 1, // Creator gets first vote automatically
                     createdAt: serverTimestamp()
                 });
+
+                // Automatically mark as voted in local storage so creator can't double dip immediately
+                const currentVotes = getLocalVotes();
+                currentVotes.push(docRef.id);
+                localStorage.setItem('ae_workshop_votes', JSON.stringify(currentVotes));
 
                 topicInput.value = '';
                 linkInput.value = '';
@@ -250,7 +248,7 @@
             }
         });
 
-        // --- Render List ---
+        // --- 4. RENDER LIST ---
         const q = query(colRef, orderBy("votes", "desc"));
 
         onSnapshot(q, (snapshot) => {
@@ -258,6 +256,9 @@
             
             const topics = [];
             snapshot.docs.forEach(doc => topics.push({ ...doc.data(), id: doc.id }));
+            
+            // Get local votes to check status for each item
+            const myVotes = getLocalVotes();
 
             if(topics.length === 0) {
                 topicList.innerHTML = `
@@ -270,51 +271,31 @@
 
             topics.forEach((topic, index) => {
                 const li = document.createElement('li');
+                li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative";
                 
-                // Determine styling based on state
-                const isCompleted = topic.completed === true;
-                const isVoted = localVotes.includes(topic.id);
-                
-                // Base classes
-                let liClasses = "glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative transition-all";
-                if(isCompleted) liClasses += " card-completed";
-                li.className = liClasses;
-                
-                // Rank Colors (Top 3)
+                // Styling for Rank 1, 2, 3
                 let rankColor = "text-gray-500";
-                if(index === 0 && !isCompleted) rankColor = "text-yellow-400";
-                if(index === 1 && !isCompleted) rankColor = "text-gray-300";
-                if(index === 2 && !isCompleted) rankColor = "text-orange-400";
+                if(index === 0) rankColor = "text-yellow-400";
+                if(index === 1) rankColor = "text-gray-300";
+                if(index === 2) rankColor = "text-orange-400";
 
-                // Completed Badge text
-                const statusText = isCompleted 
-                    ? `<span class="text-[10px] uppercase font-bold tracking-wider text-green-400 border border-green-500/30 px-2 py-0.5 rounded ml-2">Done</span>` 
-                    : '';
-
-                // Link Badge
                 const linkBadge = topic.link 
                     ? `<a href="${topic.link}" target="_blank" class="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs rounded-full transition-colors" onclick="event.stopPropagation();">
                          <i class="ph-bold ph-link"></i> Reference
                        </a>` 
                     : '';
 
-                // Vote Button Logic
-                let btnClasses = "vote-btn flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all border";
-                let btnIcon = "ph-caret-up";
-                
-                if (isVoted) {
-                    btnClasses += " btn-voted"; // Solid purple
-                    btnIcon = "ph-check";
-                } else {
-                    btnClasses += " bg-[#1a1c26] hover:bg-[#252836] border-gray-700 group-hover:border-indigo-500/30 active:scale-95 cursor-pointer";
-                }
+                // Check if user voted for this specific topic
+                const hasVoted = myVotes.includes(topic.id);
+                const voteIcon = hasVoted ? "ph-check-fat" : "ph-caret-up";
+                const voteClass = hasVoted ? "has-voted" : "hover:bg-[#252836] hover:border-indigo-500/30 active:scale-95";
 
                 li.innerHTML = `
                     <div class="flex items-start gap-4 flex-1 min-w-0">
                         <span class="text-xl font-black ${rankColor} opacity-50 font-mono mt-0.5 w-6 text-right">#${index + 1}</span>
                         <div class="flex-1 min-w-0">
                             <h3 class="text-lg font-medium text-gray-100 leading-tight break-words group-hover:text-white transition-colors">
-                                ${escapeHtml(topic.title)} ${statusText}
+                                ${escapeHtml(topic.title)}
                             </h3>
                             ${linkBadge}
                         </div>
@@ -322,27 +303,16 @@
                     
                     <div class="flex items-center gap-3">
                         <div class="admin-controls flex items-center gap-2 mr-2">
-                            <button class="complete-btn p-2 text-green-400 hover:text-white bg-green-500/10 hover:bg-green-600 rounded-lg transition" 
-                                data-id="${topic.id}" 
-                                data-status="${isCompleted}" 
-                                title="${isCompleted ? 'Mark as Undone' : 'Mark as Done'}">
-                                <i class="ph-bold ${isCompleted ? 'ph-arrow-u-up-left' : 'ph-check-circle'}"></i>
-                            </button>
-                            
-                            <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" 
-                                data-id="${topic.id}" 
-                                data-title="${escapeHtml(topic.title)}" 
-                                data-link="${escapeHtml(topic.link || '')}">
+                            <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" data-id="${topic.id}" data-title="${escapeHtml(topic.title)}" data-link="${escapeHtml(topic.link || '')}">
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>
-                            
                             <button class="delete-btn p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg transition" data-id="${topic.id}">
                                 <i class="ph-bold ph-trash"></i>
                             </button>
                         </div>
 
-                        <button class="${btnClasses}" data-id="${topic.id}">
-                            <i class="ph-bold ${btnIcon} ${isVoted ? 'text-white' : 'text-indigo-400'} text-lg mb-[-4px]"></i>
+                        <button class="vote-btn ${voteClass} flex flex-col items-center justify-center bg-[#1a1c26] border border-gray-700 w-14 h-14 rounded-xl" data-id="${topic.id}">
+                            <i class="ph-bold ${voteIcon} text-indigo-400 text-lg mb-[-4px]"></i>
                             <span class="font-bold text-white text-sm">${topic.votes}</span>
                         </button>
                     </div>
@@ -350,47 +320,41 @@
                 topicList.appendChild(li);
             });
 
-            // Attach Listeners
             attachListeners();
         });
 
         function attachListeners() {
-            // Vote
+            // Vote Listener
             document.querySelectorAll('.vote-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    // If already voted (has class btn-voted), do nothing
-                    if (btn.classList.contains('btn-voted')) return;
-                    
+                    e.stopPropagation(); // Stop click from triggering parent
                     const id = e.currentTarget.getAttribute('data-id');
+                    
+                    // Check local storage again just to be safe
+                    const myVotes = getLocalVotes();
+                    if(myVotes.includes(id)) {
+                        // Optional: Small shake animation to say "No"
+                        e.currentTarget.classList.add('animate-pulse');
+                        setTimeout(() => e.currentTarget.classList.remove('animate-pulse'), 500);
+                        return; // Stop execution
+                    }
+
                     handleVote(id);
                 });
             });
 
-            // Admin: Toggle Complete
-            document.querySelectorAll('.complete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(!isAdmin) return;
-                    const id = e.currentTarget.getAttribute('data-id');
-                    const currentStatus = e.currentTarget.getAttribute('data-status') === 'true';
-                    
-                    const docRef = doc(db, 'topics', id);
-                    await updateDoc(docRef, { completed: !currentStatus });
-                });
-            });
-
-            // Admin: Delete
+            // Delete Listener (Admin)
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
-                    if(confirm("Are you sure you want to delete this topic?")) {
+                    if(confirm("Delete this topic?")) {
                         const id = e.currentTarget.getAttribute('data-id');
                         await deleteDoc(doc(db, 'topics', id));
                     }
                 });
             });
 
-            // Admin: Edit
+            // Edit Listener (Admin)
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if(!isAdmin) return;
@@ -398,11 +362,11 @@
                     const currentTitle = e.currentTarget.getAttribute('data-title').replace(/&quot;/g, '"').replace(/&amp;/g, '&'); 
                     const currentLink = e.currentTarget.getAttribute('data-link').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
-                    const newTitle = prompt("Edit Topic Title:", currentTitle);
-                    if (newTitle === null) return;
+                    const newTitle = prompt("Edit Topic:", currentTitle);
+                    if (newTitle === null) return; 
 
-                    const newLink = prompt("Edit Reference Link:", currentLink);
-                    if (newLink === null) return;
+                    const newLink = prompt("Edit Link:", currentLink);
+                    if (newLink === null) return; 
 
                     await updateDoc(doc(db, 'topics', id), {
                         title: newTitle,
@@ -413,17 +377,16 @@
         }
 
         async function handleVote(docId) {
-            // Double check logic (though UI prevents click mostly)
-            if (localVotes.includes(docId)) {
-                return;
-            }
-
+            // 1. Update Firestore
             const docRef = doc(db, 'topics', docId);
             await updateDoc(docRef, { votes: increment(1) });
-
-            // Add to local storage
-            localVotes.push(docId);
-            localStorage.setItem('ae_workshop_votes', JSON.stringify(localVotes));
+            
+            // 2. Update Local Storage
+            const myVotes = getLocalVotes();
+            myVotes.push(docId);
+            localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
+            
+            // Note: The onSnapshot listener handles the UI update automatically
         }
 
         function escapeHtml(text) {
