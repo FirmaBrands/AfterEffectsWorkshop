@@ -3,114 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>After Effects Workshop | Wishlist</title>
+    <title>After Effects Workshop | Topic Voting</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        ae: {
-                            dark: '#161616', // AE Background
-                            panel: '#232323', // AE Panel
-                            purple: '#9999FF', // AE Highlight
-                            accent: '#cf96fb',
-                            text: '#ececec'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body { background-color: #121212; color: #ececec; }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(153, 153, 255, 0.15); }
-        .vote-btn.voted { background-color: #9999FF; color: #161616; border-color: #9999FF; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .loading-spinner { border-top-color: #9999FF; }
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Checkbox Styling */
+        .topic-checkbox:checked + div {
+            border-color: #8B5CF6; /* Purple-500 */
+            background-color: rgba(139, 92, 246, 0.1);
+        }
+        
+        .level-radio:checked + div {
+            border-color: #8B5CF6;
+            background-color: rgba(139, 92, 246, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
+        }
+
+        /* AE-like loading spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #8B5CF6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col items-center pb-20">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Header -->
-    <header class="w-full max-w-2xl px-6 pt-12 pb-8 text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-[#00005b] rounded-xl mb-6 shadow-lg border border-white/10">
-            <span class="text-[#dcb6ff] font-bold text-2xl">Ae</span>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-bold mb-3 tracking-tight">Workshop Wishlist</h1>
-        <p class="text-gray-400 text-lg">Help shape the curriculum. Vote for what you want to learn or suggest a new topic.</p>
-    </header>
-
-    <!-- Main Content -->
-    <main class="w-full max-w-2xl px-4 space-y-6">
+    <div class="max-w-2xl w-full bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden relative">
         
-        <!-- Add New Topic Section -->
-        <div class="bg-ae-panel p-1 rounded-2xl border border-white/10 shadow-xl mb-8">
-            <form id="add-form" class="flex flex-col md:flex-row gap-2 p-4">
-                <div class="flex-grow space-y-2">
-                    <input type="text" id="topic-input" placeholder="Suggest a topic (e.g., '3D Camera Tracking')" 
-                        class="w-full bg-[#161616] border border-white/10 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-ae-purple focus:ring-1 focus:ring-ae-purple transition-all placeholder-gray-600" required>
-                    <div class="flex gap-2">
-                        <select id="level-input" class="bg-[#161616] border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none">
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
-                        </select>
-                        <select id="category-input" class="bg-[#161616] border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none">
-                            <option value="UI/UX">UI/UX</option>
-                            <option value="Motion">Motion</option>
-                            <option value="Workflow">Workflow</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 h-auto md:h-auto whitespace-nowrap">
-                    <i class="fa-solid fa-plus"></i> Suggest
-                </button>
-            </form>
+        <!-- Header / Hero -->
+        <div class="bg-gradient-to-r from-violet-900 to-slate-900 p-8 text-center border-b border-slate-700">
+            <div class="w-16 h-16 bg-violet-600 rounded-lg flex items-center justify-center text-3xl font-bold mx-auto mb-4 shadow-lg text-white">Ae</div>
+            <h1 class="text-3xl font-bold mb-2">After Effects Workshop</h1>
+            <p class="text-slate-400">Help shape the curriculum! Let us know what you want to learn.</p>
         </div>
 
-        <!-- Filters (Visual only for now, could be functional) -->
-        <div class="flex items-center justify-between px-2">
-            <h2 class="text-xl font-semibold text-white">Popular Topics</h2>
-            <div class="text-xs text-gray-500 font-mono">LIVE SYNC</div>
-        </div>
-
-        <!-- Topics List -->
-        <div id="topics-container" class="space-y-4">
-            <!-- Loading State -->
-            <div class="flex justify-center py-12">
-                <div class="loading-spinner animate-spin rounded-full h-8 w-8 border-4 border-gray-700"></div>
+        <!-- Main Form -->
+        <form id="voteForm" class="p-8 space-y-8">
+            
+            <!-- Section 1: Identity -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Your Name (Optional)</label>
+                <input type="text" id="name" placeholder="Who are you?" 
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-violet-500 transition-colors">
             </div>
+
+            <!-- Section 2: Experience Level -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-4">Current Comfort Level</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Beginner -->
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="level" value="beginner" class="level-radio sr-only" required>
+                        <div class="border border-slate-600 rounded-lg p-4 text-center transition-all hover:bg-slate-700 h-full">
+                            <i class="fa-solid fa-seedling text-2xl text-green-400 mb-2"></i>
+                            <div class="font-bold">Newbie</div>
+                            <div class="text-xs text-slate-400 mt-1">"I've opened it once... maybe?"</div>
+                        </div>
+                    </label>
+                    <!-- Intermediate -->
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="level" value="intermediate" class="level-radio sr-only">
+                        <div class="border border-slate-600 rounded-lg p-4 text-center transition-all hover:bg-slate-700 h-full">
+                            <i class="fa-solid fa-layer-group text-2xl text-yellow-400 mb-2"></i>
+                            <div class="font-bold">Dabbler</div>
+                            <div class="text-xs text-slate-400 mt-1">"I can set keyframes and export."</div>
+                        </div>
+                    </label>
+                    <!-- Advanced -->
+                    <label class="cursor-pointer relative">
+                        <input type="radio" name="level" value="advanced" class="level-radio sr-only">
+                        <div class="border border-slate-600 rounded-lg p-4 text-center transition-all hover:bg-slate-700 h-full">
+                            <i class="fa-solid fa-wand-magic-sparkles text-2xl text-violet-400 mb-2"></i>
+                            <div class="font-bold">Pro</div>
+                            <div class="text-xs text-slate-400 mt-1">"I dream in Graph Editor curves."</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section 3: Topics -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-4">What do you want to learn? (Select all that apply)</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="UI Animation Basics" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-bezier-curve text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">UI Animation & Easing</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="Micro-interactions" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-toggle-on text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">Micro-interactions</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="Lottie/Bodymovin" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-code text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">Lottie/Dev Handoff</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="Mockups & Presentation" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-mobile-screen text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">Device Mockups & Tracking</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="Text Animation" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-font text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">Kinetic Typography</span>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer relative group">
+                        <input type="checkbox" name="topic" value="Workflow Efficiency" class="topic-checkbox sr-only">
+                        <div class="flex items-center p-3 rounded-lg border border-slate-600 hover:bg-slate-700 transition-all">
+                            <div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center mr-3 group-hover:bg-slate-600">
+                                <i class="fa-solid fa-bolt text-violet-400"></i>
+                            </div>
+                            <span class="text-sm">Shortcuts & Plugins</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section 4: Suggestions -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Specific Questions or Requests?</label>
+                <textarea id="suggestions" rows="3" placeholder="e.g. How do I make that bouncy button effect?" 
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-violet-500 transition-colors"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitBtn" disabled class="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span id="btnText">Initializing...</span>
+                <div id="btnLoader" class="loader hidden"></div>
+            </button>
+            
+            <p id="errorMsg" class="text-red-400 text-sm text-center hidden mt-2"></p>
+
+        </form>
+
+        <!-- Success Message (Hidden by default) -->
+        <div id="successView" class="hidden absolute inset-0 bg-slate-800 z-50 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20">
+                <i class="fa-solid fa-check text-4xl text-white"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Vote Recorded!</h2>
+            <p class="text-slate-400">Thanks for helping us plan the workshop.</p>
+            <button onclick="window.location.reload()" class="mt-8 text-violet-400 hover:text-violet-300 text-sm underline">Submit another</button>
         </div>
 
-        <!-- Empty State (Hidden by default) -->
-        <div id="empty-state" class="hidden text-center py-12 text-gray-500">
-            <p>No topics yet. Be the first to suggest one!</p>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-auto py-8 text-center text-gray-600 text-sm">
-        <p>Built for the Design Team</p>
-    </footer>
+    </div>
 
     <!-- Firebase Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, query, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuration ---
+        // Your Config
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
             authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
@@ -120,185 +214,88 @@
             appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
         };
 
-        // --- Initialization ---
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        let currentUser = null;
-        const COLLECTION_NAME = "workshop_topics";
+        // Define collection path explicitly
+        const COLLECTION_NAME = 'workshop_responses'; 
+        // Strict pathing for this artifact environment (though for your own site, just 'workshop_responses' is fine)
+        // We will use a public path structure to ensure it works in all contexts
+        const ARTIFACT_PATH_COLLECTION = collection(db, 'artifacts', 'after_effects_workshop_v1', 'public', 'data', 'responses');
 
-        // --- Default Data (Seeding) ---
-        // These are tailored for Product Designers
-        const PRESET_TOPICS = [
-            { title: "UI Micro-interactions", category: "UI/UX", level: "Intermediate", votes: 0, votedBy: [] },
-            { title: "Exporting to Lottie (JSON)", category: "Workflow", level: "Intermediate", votes: 0, votedBy: [] },
-            { title: "AE Interface Basics", category: "Workflow", level: "Beginner", votes: 0, votedBy: [] },
-            { title: "Easing & The Graph Editor", category: "Motion", level: "Intermediate", votes: 0, votedBy: [] },
-            { title: "Figma to AE Handoff", category: "Workflow", level: "Beginner", votes: 0, votedBy: [] },
-            { title: "Text Animation Presets", category: "Motion", level: "Beginner", votes: 0, votedBy: [] },
-            { title: "Mocking up Interactions on Devices", category: "UI/UX", level: "Advanced", votes: 0, votedBy: [] },
-        ];
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const voteForm = document.getElementById('voteForm');
+        const errorMsg = document.getElementById('errorMsg');
 
-        // --- DOM Elements ---
-        const container = document.getElementById('topics-container');
-        const form = document.getElementById('add-form');
-        const topicInput = document.getElementById('topic-input');
-        const levelInput = document.getElementById('level-input');
-        const categoryInput = document.getElementById('category-input');
+        // 1. Authenticate Anonymously
+        signInAnonymously(auth)
+            .then(() => {
+                console.log("Signed in anonymously");
+            })
+            .catch((error) => {
+                console.error("Auth error", error);
+                btnText.innerText = "Error connecting to DB";
+                errorMsg.innerText = "Could not connect to database. Check console.";
+                errorMsg.classList.remove('hidden');
+            });
 
-        // --- Auth & Startup ---
-        signInAnonymously(auth).catch((error) => {
-            console.error("Auth Error", error);
-        });
-
+        // 2. Monitor Auth State to enable button
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
-                initApp();
+                submitBtn.disabled = false;
+                btnText.innerText = "Submit Vote";
             }
         });
 
-        async function initApp() {
-            // 1. Check if DB is empty, if so, seed it
-            await checkAndSeedData();
-            
-            // 2. Listen for updates
-            const q = query(collection(db, COLLECTION_NAME)); // We'll sort in client to handle the array length
-            onSnapshot(q, (snapshot) => {
-                const topics = [];
-                snapshot.forEach((doc) => {
-                    topics.push({ id: doc.id, ...doc.data() });
-                });
-                renderTopics(topics);
-            });
-        }
-
-        // --- Seeding Logic ---
-        async function checkAndSeedData() {
-            const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-            if (querySnapshot.empty) {
-                console.log("Database empty. Seeding defaults...");
-                const batch = writeBatch(db);
-                PRESET_TOPICS.forEach(topic => {
-                    const docRef = doc(collection(db, COLLECTION_NAME));
-                    batch.set(docRef, topic);
-                });
-                await batch.commit();
-            }
-        }
-
-        // --- Rendering ---
-        function renderTopics(topics) {
-            container.innerHTML = '';
-            
-            // Sort by vote count (descending)
-            topics.sort((a, b) => (b.votedBy?.length || 0) - (a.votedBy?.length || 0));
-
-            if (topics.length === 0) {
-                document.getElementById('empty-state').classList.remove('hidden');
-                return;
-            } else {
-                document.getElementById('empty-state').classList.add('hidden');
-            }
-
-            topics.forEach(topic => {
-                const voteCount = topic.votedBy ? topic.votedBy.length : 0;
-                const hasVoted = topic.votedBy && topic.votedBy.includes(currentUser.uid);
-                
-                // Color coding for tags
-                const levelColor = topic.level === 'Beginner' ? 'text-green-400 bg-green-400/10' : 
-                                   topic.level === 'Intermediate' ? 'text-blue-400 bg-blue-400/10' : 'text-purple-400 bg-purple-400/10';
-
-                const el = document.createElement('div');
-                el.className = `bg-ae-panel rounded-xl p-4 md:p-5 flex items-center justify-between gap-4 border border-white/5 card-hover transition-all duration-300`;
-                
-                el.innerHTML = `
-                    <div class="flex-grow">
-                        <div class="flex gap-2 mb-2">
-                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded ${levelColor}">
-                                ${topic.level}
-                            </span>
-                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded text-gray-400 bg-white/5">
-                                ${topic.category || 'General'}
-                            </span>
-                        </div>
-                        <h3 class="text-lg md:text-xl font-medium text-white">${escapeHtml(topic.title)}</h3>
-                    </div>
-                    
-                    <button onclick="window.toggleVote('${topic.id}', ${hasVoted})" 
-                        class="vote-btn group flex flex-col items-center justify-center w-14 h-14 rounded-xl border border-white/10 transition-all duration-200 ${hasVoted ? 'voted' : 'bg-[#161616] hover:border-ae-purple/50'}">
-                        <i class="fa-solid fa-caret-up text-xl mb-[-4px] ${hasVoted ? 'text-black' : 'text-gray-500 group-hover:text-ae-purple'}"></i>
-                        <span class="font-bold text-sm ${hasVoted ? 'text-black' : 'text-white'}">${voteCount}</span>
-                    </button>
-                `;
-                container.appendChild(el);
-            });
-        }
-
-        // --- Actions ---
-        
-        // Expose function to window for HTML onClick
-        window.toggleVote = async (docId, hasVoted) => {
-            if (!currentUser) return;
-            
-            const docRef = doc(db, COLLECTION_NAME, docId);
-            try {
-                if (hasVoted) {
-                    await updateDoc(docRef, {
-                        votedBy: arrayRemove(currentUser.uid)
-                    });
-                } else {
-                    await updateDoc(docRef, {
-                        votedBy: arrayUnion(currentUser.uid)
-                    });
-                }
-            } catch (err) {
-                console.error("Error voting:", err);
-                alert("Could not register vote. Check console.");
-            }
-        };
-
-        form.addEventListener('submit', async (e) => {
+        // 3. Handle Submission
+        voteForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = topicInput.value.trim();
-            const level = levelInput.value;
-            const category = categoryInput.value;
-
-            if (!title) return;
+            
+            // UI Loading State
+            submitBtn.disabled = true;
+            btnText.innerText = "Sending...";
+            document.getElementById('btnLoader').classList.remove('hidden');
+            errorMsg.classList.add('hidden');
 
             try {
-                await addDoc(collection(db, COLLECTION_NAME), {
-                    title: title,
-                    level: level,
-                    category: category,
-                    votes: 0,
-                    votedBy: [currentUser.uid], // Auto-vote for own suggestion
-                    createdAt: new Date()
-                });
+                // Collect Data
+                const name = document.getElementById('name').value;
+                const level = document.querySelector('input[name="level"]:checked')?.value || "Not specified";
+                const suggestions = document.getElementById('suggestions').value;
                 
-                // Reset form
-                topicInput.value = '';
-                
-                // Visual feedback
-                const btn = form.querySelector('button');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Added';
-                setTimeout(() => btn.innerHTML = originalText, 2000);
+                // Get checked topics
+                const topicCheckboxes = document.querySelectorAll('input[name="topic"]:checked');
+                const topics = Array.from(topicCheckboxes).map(cb => cb.value);
 
-            } catch (err) {
-                console.error("Error adding topic:", err);
-                alert("Error adding topic. Check console.");
+                // Create payload
+                const payload = {
+                    name: name,
+                    level: level,
+                    topics: topics,
+                    suggestions: suggestions,
+                    timestamp: serverTimestamp(),
+                    userId: auth.currentUser.uid // Anonymous UID
+                };
+
+                // Send to Firestore
+                await addDoc(ARTIFACT_PATH_COLLECTION, payload);
+
+                // Show Success
+                document.getElementById('successView').classList.remove('hidden');
+                document.getElementById('successView').classList.add('flex'); // override hidden
+
+            } catch (error) {
+                console.error("Error writing document: ", error);
+                submitBtn.disabled = false;
+                btnText.innerText = "Try Again";
+                document.getElementById('btnLoader').classList.add('hidden');
+                errorMsg.innerText = "Something went wrong. Check your internet connection.";
+                errorMsg.classList.remove('hidden');
             }
         });
-
-        // Utility to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
     </script>
 </body>
 </html>
