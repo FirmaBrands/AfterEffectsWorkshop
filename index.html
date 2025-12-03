@@ -6,10 +6,10 @@
     <title>After Effects Workshop | Wishlist</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -20,11 +20,11 @@
                     },
                     colors: {
                         ae: {
-                            dark: '#00005a',
-                            base: '#0000b9',
-                            light: '#9999ff',
-                            ui: '#1f1f1f',
-                            panel: '#2d2d2d'
+                            dark: '#161616', // AE Background
+                            panel: '#232323', // AE Panel
+                            purple: '#9999FF', // AE Highlight
+                            accent: '#cf96fb',
+                            text: '#ececec'
                         }
                     }
                 }
@@ -32,174 +32,83 @@
         }
     </script>
     <style>
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-        .ae-gradient-text {
-            background: linear-gradient(to right, #cf9aff, #9999ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .custom-checkbox input:checked + div {
-            border-color: #9999ff;
-            background-color: rgba(153, 153, 255, 0.1);
-        }
-        .custom-checkbox input:checked + div .check-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-        /* AE Style UI Panel */
-        .ae-panel {
-            background-color: #1f1f1f;
-            border: 1px solid #3d3d3d;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-        }
-        .loader {
-            border-top-color: #9999ff;
-            -webkit-animation: spinner 1.5s linear infinite;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { background-color: #121212; color: #ececec; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(153, 153, 255, 0.15); }
+        .vote-btn.voted { background-color: #9999FF; color: #161616; border-color: #9999FF; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .loading-spinner { border-top-color: #9999FF; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<body class="antialiased min-h-screen flex flex-col items-center pb-20">
 
-    <div class="max-w-3xl w-full">
-        <!-- Header -->
-        <header class="text-center mb-10 pt-8">
-            <div class="inline-block p-4 rounded-2xl bg-[#00005a]/30 border border-[#0000b9]/50 mb-4 backdrop-blur-sm">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg" alt="Ae Logo" class="w-16 h-16 mx-auto drop-shadow-lg">
-            </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight text-white">
-                After Effects <span class="ae-gradient-text">Workshop</span>
-            </h1>
-            <p class="text-gray-400 text-lg max-w-xl mx-auto">
-                Help shape the curriculum. Let us know what you want to learn to level up your product design motion skills.
-            </p>
-        </header>
+    <!-- Header -->
+    <header class="w-full max-w-2xl px-6 pt-12 pb-8 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-[#00005b] rounded-xl mb-6 shadow-lg border border-white/10">
+            <span class="text-[#dcb6ff] font-bold text-2xl">Ae</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-3 tracking-tight">Workshop Wishlist</h1>
+        <p class="text-gray-400 text-lg">Help shape the curriculum. Vote for what you want to learn or suggest a new topic.</p>
+    </header>
 
-        <!-- Main Content Area -->
-        <main id="main-container" class="relative">
-            
-            <!-- Loading State -->
-            <div id="app-loading" class="flex flex-col items-center justify-center py-20">
-                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-700 h-12 w-12 mb-4"></div>
-                <p class="text-gray-500 animate-pulse">Connecting to Firebase...</p>
-            </div>
-
-            <!-- Survey Form -->
-            <form id="survey-form" class="hidden space-y-8 animate-fade-in-up">
-                
-                <!-- Section 1: Skill Level -->
-                <section class="ae-panel rounded-xl p-6 md:p-8">
-                    <h2 class="text-xl font-bold text-white mb-6 flex items-center">
-                        <i class="fa-solid fa-layer-group mr-3 text-ae-light"></i> Current Comfort Level
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Beginner -->
-                        <label class="custom-checkbox cursor-pointer group">
-                            <input type="radio" name="skillLevel" value="Beginner" class="hidden" required>
-                            <div class="border border-gray-700 rounded-lg p-5 hover:border-gray-500 transition-all h-full relative overflow-hidden bg-[#262626]">
-                                <div class="check-icon absolute top-3 right-3 opacity-0 transform scale-50 transition-all duration-200 text-ae-light">
-                                    <i class="fa-solid fa-circle-check text-xl"></i>
-                                </div>
-                                <div class="text-3xl mb-3">🐣</div>
-                                <h3 class="font-bold text-white mb-1">Newbie</h3>
-                                <p class="text-sm text-gray-400">I've opened it once or twice, but the interface scares me.</p>
-                            </div>
-                        </label>
-                        <!-- Intermediate -->
-                        <label class="custom-checkbox cursor-pointer group">
-                            <input type="radio" name="skillLevel" value="Intermediate" class="hidden">
-                            <div class="border border-gray-700 rounded-lg p-5 hover:border-gray-500 transition-all h-full relative overflow-hidden bg-[#262626]">
-                                <div class="check-icon absolute top-3 right-3 opacity-0 transform scale-50 transition-all duration-200 text-ae-light">
-                                    <i class="fa-solid fa-circle-check text-xl"></i>
-                                </div>
-                                <div class="text-3xl mb-3">🔨</div>
-                                <h3 class="font-bold text-white mb-1">Dabbler</h3>
-                                <p class="text-sm text-gray-400">I can do basic keyframes and simple transforms, but I get stuck.</p>
-                            </div>
-                        </label>
-                        <!-- Advanced -->
-                        <label class="custom-checkbox cursor-pointer group">
-                            <input type="radio" name="skillLevel" value="Advanced" class="hidden">
-                            <div class="border border-gray-700 rounded-lg p-5 hover:border-gray-500 transition-all h-full relative overflow-hidden bg-[#262626]">
-                                <div class="check-icon absolute top-3 right-3 opacity-0 transform scale-50 transition-all duration-200 text-ae-light">
-                                    <i class="fa-solid fa-circle-check text-xl"></i>
-                                </div>
-                                <div class="text-3xl mb-3">🚀</div>
-                                <h3 class="font-bold text-white mb-1">Pro</h3>
-                                <p class="text-sm text-gray-400">I know the graph editor, parenting, and masks. Show me the magic.</p>
-                            </div>
-                        </label>
+    <!-- Main Content -->
+    <main class="w-full max-w-2xl px-4 space-y-6">
+        
+        <!-- Add New Topic Section -->
+        <div class="bg-ae-panel p-1 rounded-2xl border border-white/10 shadow-xl mb-8">
+            <form id="add-form" class="flex flex-col md:flex-row gap-2 p-4">
+                <div class="flex-grow space-y-2">
+                    <input type="text" id="topic-input" placeholder="Suggest a topic (e.g., '3D Camera Tracking')" 
+                        class="w-full bg-[#161616] border border-white/10 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-ae-purple focus:ring-1 focus:ring-ae-purple transition-all placeholder-gray-600" required>
+                    <div class="flex gap-2">
+                        <select id="level-input" class="bg-[#161616] border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                        <select id="category-input" class="bg-[#161616] border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none">
+                            <option value="UI/UX">UI/UX</option>
+                            <option value="Motion">Motion</option>
+                            <option value="Workflow">Workflow</option>
+                        </select>
                     </div>
-                </section>
-
-                <!-- Section 2: Topics -->
-                <section class="ae-panel rounded-xl p-6 md:p-8">
-                    <h2 class="text-xl font-bold text-white mb-2 flex items-center">
-                        <i class="fa-solid fa-wand-magic-sparkles mr-3 text-ae-light"></i> What do you want to learn?
-                    </h2>
-                    <p class="text-gray-400 text-sm mb-6">Select all that apply.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="topics-container">
-                        <!-- Topics injected via JS -->
-                    </div>
-                </section>
-
-                <!-- Section 3: Open Suggestion -->
-                <section class="ae-panel rounded-xl p-6 md:p-8">
-                    <h2 class="text-xl font-bold text-white mb-4 flex items-center">
-                        <i class="fa-regular fa-comment-dots mr-3 text-ae-light"></i> Specific Requests?
-                    </h2>
-                    <textarea id="suggestion-text" rows="3" class="w-full bg-[#121212] border border-gray-700 rounded-lg p-4 text-white focus:outline-none focus:border-ae-light focus:ring-1 focus:ring-ae-light transition-all resize-none" placeholder="e.g. How do I make that bouncy notification animation?"></textarea>
-                </section>
-
-                <!-- Submit -->
-                <div class="text-center pb-12">
-                    <button type="submit" id="submit-btn" class="bg-ae-base hover:bg-ae-dark text-white font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-indigo-900/50 flex items-center justify-center mx-auto min-w-[200px]">
-                        <span>Submit Vote</span>
-                        <i class="fa-solid fa-paper-plane ml-2"></i>
-                    </button>
-                    <p id="error-msg" class="text-red-400 mt-4 text-sm hidden"></p>
                 </div>
+                <button type="submit" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 h-auto md:h-auto whitespace-nowrap">
+                    <i class="fa-solid fa-plus"></i> Suggest
+                </button>
             </form>
+        </div>
 
-            <!-- Results View -->
-            <div id="results-view" class="hidden space-y-8 animate-fade-in-up pb-20">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 text-green-400 mb-4 border border-green-500/50">
-                        <i class="fa-solid fa-check text-2xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white">Thanks for voting!</h2>
-                    <p class="text-gray-400">Here is what the team wants to learn so far:</p>
-                </div>
+        <!-- Filters (Visual only for now, could be functional) -->
+        <div class="flex items-center justify-between px-2">
+            <h2 class="text-xl font-semibold text-white">Popular Topics</h2>
+            <div class="text-xs text-gray-500 font-mono">LIVE SYNC</div>
+        </div>
 
-                <!-- Skill Breakdown -->
-                <div class="ae-panel rounded-xl p-6">
-                    <h3 class="text-lg font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Experience Level</h3>
-                    <div id="skill-results" class="space-y-4"></div>
-                </div>
-
-                <!-- Topic Breakdown -->
-                <div class="ae-panel rounded-xl p-6">
-                    <h3 class="text-lg font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2">Top Requested Topics</h3>
-                    <div id="topic-results" class="space-y-4"></div>
-                </div>
+        <!-- Topics List -->
+        <div id="topics-container" class="space-y-4">
+            <!-- Loading State -->
+            <div class="flex justify-center py-12">
+                <div class="loading-spinner animate-spin rounded-full h-8 w-8 border-4 border-gray-700"></div>
             </div>
+        </div>
 
-        </main>
-    </div>
+        <!-- Empty State (Hidden by default) -->
+        <div id="empty-state" class="hidden text-center py-12 text-gray-500">
+            <p>No topics yet. Be the first to suggest one!</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-8 text-center text-gray-600 text-sm">
+        <p>Built for the Design Team</p>
+    </footer>
 
     <!-- Firebase Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, arrayUnion, arrayRemove, onSnapshot, query, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         // --- Configuration ---
         const firebaseConfig = {
@@ -210,269 +119,185 @@
             messagingSenderId: "522266658938",
             appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
         };
-        
-        // Use a generic app ID for the artifact path (required by your system instructions)
-        const ARTIFACT_APP_ID = "ae-workshop-voting"; 
-        
+
         // --- Initialization ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // --- State & Data ---
         let currentUser = null;
-        const topicOptions = [
-            "UI Animation Basics (Easing, Timing)",
-            "Micro-interactions (Buttons, Toggles)",
-            "Exporting to Code (Lottie/Rive)",
-            "Masking & Track Mattes",
-            "Working with Shape Layers",
-            "3D in After Effects",
-            "Text Animation Presets",
-            "Figma to AE Workflow",
-            "Effects & Plugins",
-            "Keyboard Shortcuts & Efficiency"
+        const COLLECTION_NAME = "workshop_topics";
+
+        // --- Default Data (Seeding) ---
+        // These are tailored for Product Designers
+        const PRESET_TOPICS = [
+            { title: "UI Micro-interactions", category: "UI/UX", level: "Intermediate", votes: 0, votedBy: [] },
+            { title: "Exporting to Lottie (JSON)", category: "Workflow", level: "Intermediate", votes: 0, votedBy: [] },
+            { title: "AE Interface Basics", category: "Workflow", level: "Beginner", votes: 0, votedBy: [] },
+            { title: "Easing & The Graph Editor", category: "Motion", level: "Intermediate", votes: 0, votedBy: [] },
+            { title: "Figma to AE Handoff", category: "Workflow", level: "Beginner", votes: 0, votedBy: [] },
+            { title: "Text Animation Presets", category: "Motion", level: "Beginner", votes: 0, votedBy: [] },
+            { title: "Mocking up Interactions on Devices", category: "UI/UX", level: "Advanced", votes: 0, votedBy: [] },
         ];
 
         // --- DOM Elements ---
-        const loadingEl = document.getElementById('app-loading');
-        const formEl = document.getElementById('survey-form');
-        const resultsEl = document.getElementById('results-view');
-        const topicsContainer = document.getElementById('topics-container');
-        const submitBtn = document.getElementById('submit-btn');
-        const errorMsg = document.getElementById('error-msg');
-
-        // --- Setup UI ---
-        function renderTopics() {
-            topicsContainer.innerHTML = topicOptions.map((topic, index) => `
-                <label class="custom-checkbox cursor-pointer select-none">
-                    <input type="checkbox" name="topics" value="${topic}" class="hidden">
-                    <div class="border border-gray-700 rounded-lg p-4 hover:border-gray-500 bg-[#262626] transition-all flex items-center justify-between h-full">
-                        <span class="text-gray-200 font-medium text-sm md:text-base">${topic}</span>
-                        <div class="w-5 h-5 rounded-full border border-gray-500 flex items-center justify-center check-icon bg-[#121212]">
-                            <div class="w-3 h-3 rounded-full bg-ae-light opacity-0 transition-opacity"></div>
-                        </div>
-                    </div>
-                </label>
-            `).join('');
-
-            // Add custom check logic for visual feedback
-            document.querySelectorAll('input[type="checkbox"]').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const dot = e.target.parentElement.querySelector('.check-icon div');
-                    const card = e.target.parentElement.querySelector('div'); // The main container
-                    if (e.target.checked) {
-                        dot.classList.remove('opacity-0');
-                        card.classList.add('border-ae-light');
-                        card.classList.add('bg-ae-base/10');
-                    } else {
-                        dot.classList.add('opacity-0');
-                        card.classList.remove('border-ae-light');
-                        card.classList.remove('bg-ae-base/10');
-                    }
-                });
-            });
-        }
+        const container = document.getElementById('topics-container');
+        const form = document.getElementById('add-form');
+        const topicInput = document.getElementById('topic-input');
+        const levelInput = document.getElementById('level-input');
+        const categoryInput = document.getElementById('category-input');
 
         // --- Auth & Startup ---
-        async function init() {
-            renderTopics();
+        signInAnonymously(auth).catch((error) => {
+            console.error("Auth Error", error);
+        });
 
-            // Check if already voted locally to skip straight to results
-            if (localStorage.getItem('hasVoted') === 'true') {
-                showResults();
-            }
-
-            try {
-                await signInAnonymously(auth);
-                
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        currentUser = user;
-                        loadingEl.classList.add('hidden');
-                        
-                        // If they haven't voted, show form
-                        if (localStorage.getItem('hasVoted') !== 'true') {
-                            formEl.classList.remove('hidden');
-                            formEl.classList.add('flex', 'flex-col'); // restore flex
-                        } else {
-                            // If they have voted, ensure listeners are active for results
-                            subscribeToResults();
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Auth Error:", error);
-                errorMsg.textContent = "Error connecting to database. Refresh the page.";
-                errorMsg.classList.remove('hidden');
-            }
-        }
-
-        // --- Form Handling ---
-        formEl.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            // Get Skill Level
-            const skillLevel = document.querySelector('input[name="skillLevel"]:checked')?.value;
-            
-            // Get Topics
-            const checkedTopics = Array.from(document.querySelectorAll('input[name="topics"]:checked'))
-                .map(cb => cb.value);
-
-            // Get Suggestion
-            const suggestion = document.getElementById('suggestion-text').value.trim();
-
-            if (!skillLevel) {
-                errorMsg.textContent = "Please select a skill level.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-
-            // UI Loading state
-            const btnText = submitBtn.querySelector('span');
-            const btnIcon = submitBtn.querySelector('i');
-            const originalText = btnText.innerText;
-            
-            btnText.innerText = "Sending...";
-            btnIcon.classList.remove('fa-paper-plane');
-            btnIcon.classList.add('fa-spinner', 'fa-spin');
-            submitBtn.disabled = true;
-
-            try {
-                // Rule 1: Strict Path Structure for Public Data
-                const votesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'votes');
-                
-                await addDoc(votesRef, {
-                    uid: currentUser.uid,
-                    skillLevel: skillLevel,
-                    topics: checkedTopics,
-                    suggestion: suggestion,
-                    timestamp: serverTimestamp()
-                });
-
-                // Set LocalStorage
-                localStorage.setItem('hasVoted', 'true');
-
-                // Transition UI
-                formEl.classList.add('hidden');
-                showResults();
-
-            } catch (error) {
-                console.error("Error writing document: ", error);
-                errorMsg.textContent = "Submission failed. Please try again.";
-                errorMsg.classList.remove('hidden');
-                
-                // Reset button
-                btnText.innerText = originalText;
-                btnIcon.classList.add('fa-paper-plane');
-                btnIcon.classList.remove('fa-spinner', 'fa-spin');
-                submitBtn.disabled = false;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                initApp();
             }
         });
 
-        // --- Results Logic ---
-        function showResults() {
-            loadingEl.classList.add('hidden');
-            formEl.classList.add('hidden');
-            resultsEl.classList.remove('hidden');
-            subscribeToResults();
-        }
-
-        function subscribeToResults() {
-            // Rule 2: No complex queries (orderBy/limit) - Fetch all and sort in memory
-            const votesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'votes');
+        async function initApp() {
+            // 1. Check if DB is empty, if so, seed it
+            await checkAndSeedData();
             
-            onSnapshot(votesRef, (snapshot) => {
-                const votes = [];
+            // 2. Listen for updates
+            const q = query(collection(db, COLLECTION_NAME)); // We'll sort in client to handle the array length
+            onSnapshot(q, (snapshot) => {
+                const topics = [];
                 snapshot.forEach((doc) => {
-                    votes.push(doc.data());
+                    topics.push({ id: doc.id, ...doc.data() });
                 });
-
-                processAndRenderResults(votes);
-            }, (error) => {
-                console.error("Error getting votes:", error);
+                renderTopics(topics);
             });
         }
 
-        function processAndRenderResults(votes) {
-            if (votes.length === 0) return;
+        // --- Seeding Logic ---
+        async function checkAndSeedData() {
+            const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+            if (querySnapshot.empty) {
+                console.log("Database empty. Seeding defaults...");
+                const batch = writeBatch(db);
+                PRESET_TOPICS.forEach(topic => {
+                    const docRef = doc(collection(db, COLLECTION_NAME));
+                    batch.set(docRef, topic);
+                });
+                await batch.commit();
+            }
+        }
 
-            // 1. Process Skills
-            const skillCounts = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
-            votes.forEach(v => {
-                if (skillCounts[v.skillLevel] !== undefined) skillCounts[v.skillLevel]++;
-            });
+        // --- Rendering ---
+        function renderTopics(topics) {
+            container.innerHTML = '';
+            
+            // Sort by vote count (descending)
+            topics.sort((a, b) => (b.votedBy?.length || 0) - (a.votedBy?.length || 0));
 
-            const totalVotes = votes.length;
-            const skillContainer = document.getElementById('skill-results');
-            skillContainer.innerHTML = '';
+            if (topics.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('empty-state').classList.add('hidden');
+            }
 
-            Object.keys(skillCounts).forEach(skill => {
-                const count = skillCounts[skill];
-                const pct = ((count / totalVotes) * 100).toFixed(0);
+            topics.forEach(topic => {
+                const voteCount = topic.votedBy ? topic.votedBy.length : 0;
+                const hasVoted = topic.votedBy && topic.votedBy.includes(currentUser.uid);
                 
-                let icon = skill === 'Beginner' ? '🐣' : (skill === 'Intermediate' ? '🔨' : '🚀');
-                let color = skill === 'Beginner' ? 'bg-green-500' : (skill === 'Intermediate' ? 'bg-blue-500' : 'bg-purple-500');
+                // Color coding for tags
+                const levelColor = topic.level === 'Beginner' ? 'text-green-400 bg-green-400/10' : 
+                                   topic.level === 'Intermediate' ? 'text-blue-400 bg-blue-400/10' : 'text-purple-400 bg-purple-400/10';
 
-                skillContainer.innerHTML += `
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-white font-medium">${icon} ${skill}</span>
-                            <span class="text-gray-400">${count} votes (${pct}%)</span>
+                const el = document.createElement('div');
+                el.className = `bg-ae-panel rounded-xl p-4 md:p-5 flex items-center justify-between gap-4 border border-white/5 card-hover transition-all duration-300`;
+                
+                el.innerHTML = `
+                    <div class="flex-grow">
+                        <div class="flex gap-2 mb-2">
+                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded ${levelColor}">
+                                ${topic.level}
+                            </span>
+                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded text-gray-400 bg-white/5">
+                                ${topic.category || 'General'}
+                            </span>
                         </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2.5">
-                            <div class="${color} h-2.5 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
-                        </div>
+                        <h3 class="text-lg md:text-xl font-medium text-white">${escapeHtml(topic.title)}</h3>
                     </div>
+                    
+                    <button onclick="window.toggleVote('${topic.id}', ${hasVoted})" 
+                        class="vote-btn group flex flex-col items-center justify-center w-14 h-14 rounded-xl border border-white/10 transition-all duration-200 ${hasVoted ? 'voted' : 'bg-[#161616] hover:border-ae-purple/50'}">
+                        <i class="fa-solid fa-caret-up text-xl mb-[-4px] ${hasVoted ? 'text-black' : 'text-gray-500 group-hover:text-ae-purple'}"></i>
+                        <span class="font-bold text-sm ${hasVoted ? 'text-black' : 'text-white'}">${voteCount}</span>
+                    </button>
                 `;
+                container.appendChild(el);
             });
+        }
 
-            // 2. Process Topics
-            const topicCounts = {};
-            // Initialize with 0 for all options so they appear even if 0 votes
-            topicOptions.forEach(t => topicCounts[t] = 0);
-
-            votes.forEach(v => {
-                if (v.topics && Array.isArray(v.topics)) {
-                    v.topics.forEach(topic => {
-                        if (topicCounts[topic] !== undefined) {
-                            topicCounts[topic]++;
-                        }
+        // --- Actions ---
+        
+        // Expose function to window for HTML onClick
+        window.toggleVote = async (docId, hasVoted) => {
+            if (!currentUser) return;
+            
+            const docRef = doc(db, COLLECTION_NAME, docId);
+            try {
+                if (hasVoted) {
+                    await updateDoc(docRef, {
+                        votedBy: arrayRemove(currentUser.uid)
+                    });
+                } else {
+                    await updateDoc(docRef, {
+                        votedBy: arrayUnion(currentUser.uid)
                     });
                 }
-            });
+            } catch (err) {
+                console.error("Error voting:", err);
+                alert("Could not register vote. Check console.");
+            }
+        };
 
-            // Convert to array and sort
-            const sortedTopics = Object.entries(topicCounts)
-                .sort(([,a], [,b]) => b - a);
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = topicInput.value.trim();
+            const level = levelInput.value;
+            const category = categoryInput.value;
 
-            const topicContainer = document.getElementById('topic-results');
-            topicContainer.innerHTML = '';
+            if (!title) return;
 
-            sortedTopics.forEach(([topic, count]) => {
-                const pct = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(0) : 0;
+            try {
+                await addDoc(collection(db, COLLECTION_NAME), {
+                    title: title,
+                    level: level,
+                    category: category,
+                    votes: 0,
+                    votedBy: [currentUser.uid], // Auto-vote for own suggestion
+                    createdAt: new Date()
+                });
                 
-                // Highlight highly requested items
-                const barColor = pct > 50 ? 'bg-ae-light' : 'bg-gray-500';
-                const textColor = pct > 50 ? 'text-white' : 'text-gray-400';
+                // Reset form
+                topicInput.value = '';
+                
+                // Visual feedback
+                const btn = form.querySelector('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Added';
+                setTimeout(() => btn.innerHTML = originalText, 2000);
 
-                topicContainer.innerHTML += `
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="${textColor}">${topic}</span>
-                            <span class="text-gray-500">${count}</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-1.5">
-                            <div class="${barColor} h-1.5 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                `;
-            });
+            } catch (err) {
+                console.error("Error adding topic:", err);
+                alert("Error adding topic. Check console.");
+            }
+        });
+
+        // Utility to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
-
-        // Start App
-        init();
 
     </script>
 </body>
