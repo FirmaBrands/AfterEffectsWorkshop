@@ -3,71 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>After Effects Workshop | Team Vote</title>
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
+    <title>After Effects Workshop | Wishlist</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Tailwind Config -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                     colors: {
                         ae: {
-                            dark: '#0f0f1d', // Deep AE interface gray
-                            panel: '#1f1f2e',
-                            purple: '#cf8bf3', // AE logo purple
-                            blue: '#4c96ff',
-                            text: '#e6e6e6'
+                            dark: '#121212',
+                            panel: '#1e1e1e',
+                            purple: '#9999FF',
+                            blue: '#00C8FF',
+                            accent: '#6e6eff'
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #0f0f1d; color: #e6e6e6; }
-        .glass-panel {
-            background: rgba(31, 31, 46, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f0f1d; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #444; }
-        
-        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .ae-card {
+            transition: all 0.2s ease;
+            border: 1px solid #333;
+        }
+        .ae-card:hover {
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+        .ae-card.selected {
+            border-color: #9999FF;
+            background-color: rgba(153, 153, 255, 0.1);
+            box-shadow: 0 0 15px rgba(153, 153, 255, 0.2);
+        }
+        .ae-btn {
+            background: linear-gradient(90deg, #6e6eff 0%, #9999FF 100%);
+            transition: opacity 0.2s;
+        }
+        .ae-btn:hover {
+            opacity: 0.9;
+        }
+        .progress-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="min-h-screen flex flex-col font-sans selection:bg-ae-purple selection:text-black">
 
-    <!-- Firebase SDKs -->
+    <!-- Header -->
+    <header class="w-full p-6 border-b border-gray-800 bg-ae-panel sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-[#00005b] border-2 border-ae-purple rounded flex items-center justify-center text-ae-purple font-bold text-xl shadow-[0_0_10px_rgba(153,153,255,0.4)]">
+                    Ae
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide">Workshop Wishlist</h1>
+                    <p class="text-xs text-gray-400">Design Team Training</p>
+                </div>
+            </div>
+            <div id="connection-status" class="text-xs text-green-500 flex items-center gap-2 opacity-0 transition-opacity">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Live
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 md:p-8">
+        <div class="max-w-3xl mx-auto space-y-12">
+
+            <!-- Intro -->
+            <div class="text-center space-y-4 py-8">
+                <h2 class="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-ae-blue to-ae-purple">
+                    What do you want to create?
+                </h2>
+                <p class="text-gray-400 max-w-lg mx-auto">
+                    I'm planning an After Effects workshop tailored for us. 
+                    Vote specifically for what will help your workflow the most.
+                </p>
+            </div>
+
+            <!-- FORM SECTION -->
+            <div id="survey-form" class="space-y-10">
+                
+                <!-- Section 1: Skill Level -->
+                <section>
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-white">
+                        <i class="fas fa-layer-group text-ae-purple"></i> 1. Your Current Comfort Level
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="selectSkill('Newbie')" id="skill-Newbie" class="skill-btn ae-card p-6 rounded-xl text-left group">
+                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-seedling"></i></div>
+                            <div class="font-bold text-lg">Total Newbie</div>
+                            <p class="text-sm text-gray-500 mt-2">I've never opened it / It scares me.</p>
+                        </button>
+                        <button onclick="selectSkill('Dabbler')" id="skill-Dabbler" class="skill-btn ae-card p-6 rounded-xl text-left group">
+                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-hand-pointer"></i></div>
+                            <div class="font-bold text-lg">The Dabbler</div>
+                            <p class="text-sm text-gray-500 mt-2">I can change keyframes and render simple stuff.</p>
+                        </button>
+                        <button onclick="selectSkill('Pro')" id="skill-Pro" class="skill-btn ae-card p-6 rounded-xl text-left group">
+                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-magic"></i></div>
+                            <div class="font-bold text-lg">Animation Pro</div>
+                            <p class="text-sm text-gray-500 mt-2">I know the graph editor and shortcuts.</p>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Section 2: Topics -->
+                <section>
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-white">
+                        <i class="fas fa-graduation-cap text-ae-purple"></i> 2. What should we cover?
+                        <span class="text-xs font-normal text-gray-500 ml-2">(Select all that apply)</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Topic Items -->
+                        <div onclick="toggleTopic(this, 'UI Animation')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-ae-blue"><i class="fas fa-mouse-pointer"></i></div>
+                                <div>
+                                    <div class="font-semibold">UI Animation Basics</div>
+                                    <div class="text-xs text-gray-500">Easing, timing, & material curves</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="toggleTopic(this, 'Lottie & Exporting')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-green-400"><i class="fas fa-code"></i></div>
+                                <div>
+                                    <div class="font-semibold">Lottie & Handoff</div>
+                                    <div class="text-xs text-gray-500">Preparing assets for dev implementation</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="toggleTopic(this, 'Micro-interactions')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-yellow-400"><i class="fas fa-toggle-on"></i></div>
+                                <div>
+                                    <div class="font-semibold">Micro-interactions</div>
+                                    <div class="text-xs text-gray-500">Button states, toggles, loaders</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="toggleTopic(this, 'Mockup Compositing')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-pink-400"><i class="fas fa-mobile-alt"></i></div>
+                                <div>
+                                    <div class="font-semibold">Mockup Compositing</div>
+                                    <div class="text-xs text-gray-500">Putting screens onto devices naturally</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="toggleTopic(this, 'Logo Animation')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-orange-400"><i class="fas fa-shapes"></i></div>
+                                <div>
+                                    <div class="font-semibold">Brand/Logo Motion</div>
+                                    <div class="text-xs text-gray-500">Intros, outros, and brand expression</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+                        
+                         <div onclick="toggleTopic(this, 'Workflow & Shortcuts')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-gray-800 p-2 rounded text-purple-400"><i class="fas fa-keyboard"></i></div>
+                                <div>
+                                    <div class="font-semibold">Speed Workflow</div>
+                                    <div class="text-xs text-gray-500">Shortcuts, plugins, and productivity</div>
+                                </div>
+                            </div>
+                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
+                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Custom -->
+                <section>
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-white">
+                        <i class="fas fa-comment-dots text-ae-purple"></i> 3. Specific Requests?
+                    </h3>
+                    <div class="glass-panel p-1 rounded-lg">
+                        <textarea id="custom-suggestion" class="w-full bg-ae-dark text-gray-300 p-4 rounded border border-transparent focus:border-ae-purple focus:outline-none h-24 resize-none" placeholder="e.g. How do I make that glowing line effect?"></textarea>
+                    </div>
+                </section>
+
+                <!-- Submit Action -->
+                <div class="pt-6">
+                    <button onclick="submitVote()" id="submit-btn" class="ae-btn w-full py-4 rounded-lg font-bold text-lg text-white shadow-lg transform active:scale-95 flex items-center justify-center gap-2">
+                        <span>Cast Vote</span>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <p id="error-msg" class="text-red-500 text-center mt-2 hidden text-sm"></p>
+                </div>
+            </div>
+
+            <!-- RESULTS SECTION (Initially Hidden) -->
+            <div id="results-dashboard" class="hidden space-y-10 animate-fade-in">
+                <div class="bg-green-500/10 border border-green-500/30 p-4 rounded-lg text-green-400 text-center mb-8">
+                    <i class="fas fa-check-circle mr-2"></i> Thanks! Your input has been recorded.
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <h3 class="text-2xl font-bold">Live Results</h3>
+                    <div class="text-sm text-gray-500">Based on <span id="total-voters" class="text-white font-bold">0</span> votes</div>
+                </div>
+
+                <!-- Skill Breakdown -->
+                <div class="glass-panel p-6 rounded-xl">
+                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-4">Class Composition</h4>
+                    <div class="flex h-4 rounded-full overflow-hidden bg-gray-800" id="skill-bar-container">
+                        <!-- Injected via JS -->
+                    </div>
+                    <div class="flex justify-between mt-3 text-sm" id="skill-legend">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Topic Rankings -->
+                <div class="glass-panel p-6 rounded-xl">
+                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-6">Most Wanted Topics</h4>
+                    <div class="space-y-4" id="topic-rankings">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Suggestions Feed -->
+                <div>
+                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-4">Open Suggestions</h4>
+                    <div class="grid grid-cols-1 gap-3" id="suggestions-feed">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+                
+                 <div class="pt-6 text-center">
+                    <button onclick="window.location.reload()" class="text-gray-500 hover:text-white text-sm underline">
+                        Submit another response
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <footer class="text-center p-8 text-gray-600 text-xs">
+        <p>Built for the Product Design Team</p>
+    </footer>
+
+    <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import React from 'https://esm.sh/react@18.2.0';
-        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- Configuration ---
+        // CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
             authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
@@ -77,372 +314,215 @@
             appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
         };
 
+        // CONSTANTS
+        // Using a fixed app ID for path structure compatibility
+        const APP_ID = 'ae-workshop-tracker';
+        const COLLECTION_NAME = 'workshop_responses';
+
+        // INIT
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Determine App ID for pathing (using a fixed ID for your workshop)
-        const WORKSHOP_ID = "ae-workshop-2025"; 
-        
-        // --- React Components ---
+        // STATE
+        let currentUser = null;
+        let selectedSkill = null;
+        let selectedTopics = [];
+        let hasVoted = localStorage.getItem('ae_workshop_voted') === 'true';
 
-        const LucideIcon = ({ name, size = 24, className = "" }) => {
-            const iconName = name.charAt(0).toUpperCase() + name.slice(1);
-            const Icon = window.lucide && window.lucide.icons ? window.lucide.icons[iconName] : null;
-            if (!Icon) return null;
-            
-            // Create a React element from the Lucide icon
-            return React.createElement('svg', {
-                ...Icon,
-                width: size,
-                height: size,
-                className: className,
-                stroke: "currentColor",
-                strokeWidth: 2,
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                dangerouslySetInnerHTML: { __html: window.lucide.createIcons({ icons: { [iconName]: Icon }, attrs: { class: "hidden" } }) ? '' : '' } // Lucide generic render hack for raw SVG
-            });
-        };
-
-        // Simpler Icon wrapper since the above is complex with CDN
-        const Icon = ({ name, className }) => {
-            React.useEffect(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, [name]);
-            return <i data-lucide={name} className={className}></i>;
-        };
-
-        const PRESET_TOPICS = [
-            "UI Animation Principles",
-            "Lottie / Web Export",
-            "3D Tracking & Composition",
-            "Micro-interactions",
-            "Character Rigging (Duik/Rubberhose)",
-            "Text Animation & Typography",
-            "Expressions & Scripting",
-            "Rotoscoping",
-            "Motion Branding"
-        ];
-
-        const SKILL_LEVELS = [
-            { id: 'beginner', label: 'Beginner', desc: 'I open AE by accident sometimes.' },
-            { id: 'intermediate', label: 'Intermediate', desc: 'I can keyframe, but graphs are scary.' },
-            { id: 'advanced', label: 'Advanced', desc: 'I dream in Bezier curves.' }
-        ];
-
-        function App() {
-            const [user, setUser] = React.useState(null);
-            const [hasVoted, setHasVoted] = React.useState(false);
-            const [loading, setLoading] = React.useState(true);
-            const [ballots, setBallots] = React.useState([]);
-            
-            // Form State
-            const [skill, setSkill] = React.useState('');
-            const [selectedTopics, setSelectedTopics] = React.useState([]);
-            const [customTopic, setCustomTopic] = React.useState('');
-            const [submitting, setSubmitting] = React.useState(false);
-
-            // Auth & Check Local Storage
-            React.useEffect(() => {
-                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-                    setUser(currentUser);
-                    if (!currentUser) {
-                        signInAnonymously(auth).catch(console.error);
-                    }
-                });
-
-                const localVote = localStorage.getItem(`voted_${WORKSHOP_ID}`);
-                if (localVote) setHasVoted(true);
-
-                return () => unsubscribe();
-            }, []);
-
-            // Fetch Data
-            React.useEffect(() => {
-                if (!user) return;
+        // AUTH & LISTENER
+        async function init() {
+            try {
+                // Anonymous auth is safer than open rules and ensures stable userId
+                const userCredential = await signInAnonymously(auth);
+                currentUser = userCredential.user;
                 
-                // Using the requested Artifacts path structure
-                const ballotsRef = collection(db, 'artifacts', WORKSHOP_ID, 'public', 'data', 'ballots');
-                const q = query(ballotsRef);
+                document.getElementById('connection-status').classList.remove('opacity-0');
 
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setBallots(data);
-                    setLoading(false);
-                }, (error) => {
-                    console.error("Error fetching ballots:", error);
-                    setLoading(false);
-                });
-
-                return () => unsubscribe();
-            }, [user]);
-
-            const handleToggleTopic = (topic) => {
-                if (selectedTopics.includes(topic)) {
-                    setSelectedTopics(prev => prev.filter(t => t !== topic));
-                } else {
-                    setSelectedTopics(prev => [...prev, topic]);
+                // If they already voted locally, show results immediately
+                if(hasVoted) {
+                    showResultsView();
                 }
-            };
 
-            const handleSubmit = async () => {
-                if (!skill) return alert("Please select a skill level!");
-                if (selectedTopics.length === 0 && !customTopic) return alert("Please pick at least one topic!");
+                // Setup Listener
+                setupRealtimeListener();
 
-                setSubmitting(true);
-
-                const finalTopics = [...selectedTopics];
-                if (customTopic.trim()) finalTopics.push(customTopic.trim());
-
-                try {
-                    const ballotsRef = collection(db, 'artifacts', WORKSHOP_ID, 'public', 'data', 'ballots');
-                    await addDoc(ballotsRef, {
-                        uid: user.uid,
-                        skillLevel: skill,
-                        topics: finalTopics,
-                        timestamp: serverTimestamp()
-                    });
-
-                    localStorage.setItem(`voted_${WORKSHOP_ID}`, 'true');
-                    setHasVoted(true);
-                } catch (e) {
-                    console.error("Error submitting vote:", e);
-                    alert("Something went wrong. Check console.");
-                }
-                setSubmitting(false);
-            };
-
-            // Calculate Results
-            const results = React.useMemo(() => {
-                const total = ballots.length;
-                if (total === 0) return null;
-
-                const skillCounts = { beginner: 0, intermediate: 0, advanced: 0 };
-                const topicCounts = {};
-
-                ballots.forEach(b => {
-                    // Count Skills
-                    if (skillCounts[b.skillLevel] !== undefined) {
-                        skillCounts[b.skillLevel]++;
-                    }
-                    // Count Topics
-                    if (Array.isArray(b.topics)) {
-                        b.topics.forEach(t => {
-                            topicCounts[t] = (topicCounts[t] || 0) + 1;
-                        });
-                    }
-                });
-
-                const rankedTopics = Object.entries(topicCounts)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([name, count]) => ({ name, count }));
-
-                return { total, skillCounts, rankedTopics };
-
-            }, [ballots]);
-
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-ae-dark text-ae-purple">
-                        <div className="flex flex-col items-center gap-4">
-                            <Icon name="loader-2" className="w-8 h-8 animate-spin" />
-                            <p className="text-gray-400 text-sm">Loading Workshop Data...</p>
-                        </div>
-                    </div>
-                );
+            } catch (error) {
+                console.error("Auth Error:", error);
+                document.getElementById('error-msg').innerText = "Connection failed. Try refreshing.";
+                document.getElementById('error-msg').classList.remove('hidden');
             }
-
-            return (
-                <div className="min-h-screen bg-ae-dark text-gray-200 p-4 md:p-8 font-sans selection:bg-ae-purple selection:text-white pb-20">
-                    <div className="max-w-3xl mx-auto">
-                        
-                        {/* Header */}
-                        <header className="mb-12 text-center animate-fade-in">
-                            <div className="inline-flex items-center justify-center p-3 bg-ae-panel rounded-2xl mb-4 border border-white/5 shadow-2xl">
-                                <span className="bg-[#00005b] text-[#cf8bf3] font-bold px-3 py-1 rounded border border-[#cf8bf3]/30 mr-3">Ae</span>
-                                <h1 className="text-xl font-bold tracking-tight text-white">Workshop Wishlist</h1>
-                            </div>
-                            <p className="text-gray-400 max-w-lg mx-auto">
-                                Help tailor the upcoming After Effects sessions. Vote for what you want to learn so we don't bore you with the basics (or overwhelm you with the wizardry).
-                            </p>
-                        </header>
-
-                        {!hasVoted ? (
-                            <div className="space-y-8 animate-fade-in">
-                                {/* Skill Section */}
-                                <section>
-                                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-ae-purple text-ae-dark text-xs font-bold">1</span>
-                                        What's your current comfort level?
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        {SKILL_LEVELS.map((lvl) => (
-                                            <button
-                                                key={lvl.id}
-                                                onClick={() => setSkill(lvl.id)}
-                                                className={`p-6 rounded-xl border text-left transition-all duration-200 group relative overflow-hidden
-                                                    ${skill === lvl.id 
-                                                        ? 'bg-ae-purple/10 border-ae-purple shadow-[0_0_20px_rgba(207,139,243,0.15)]' 
-                                                        : 'bg-ae-panel border-white/5 hover:border-white/20 hover:bg-white/5'
-                                                    }`}
-                                            >
-                                                <div className="relative z-10">
-                                                    <div className="font-bold text-white mb-1">{lvl.label}</div>
-                                                    <div className="text-xs text-gray-400 group-hover:text-gray-300">{lvl.desc}</div>
-                                                </div>
-                                                {skill === lvl.id && (
-                                                    <div className="absolute top-2 right-2 text-ae-purple">
-                                                        <Icon name="check-circle" className="w-5 h-5" />
-                                                    </div>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </section>
-
-                                {/* Topics Section */}
-                                <section>
-                                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-ae-purple text-ae-dark text-xs font-bold">2</span>
-                                        What do you want to learn?
-                                    </h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                        {PRESET_TOPICS.map((topic) => (
-                                            <button
-                                                key={topic}
-                                                onClick={() => handleToggleTopic(topic)}
-                                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border text-left flex justify-between items-center
-                                                    ${selectedTopics.includes(topic)
-                                                        ? 'bg-ae-blue/20 border-ae-blue text-white shadow-[0_0_15px_rgba(76,150,255,0.1)]'
-                                                        : 'bg-ae-panel border-white/5 text-gray-400 hover:text-white hover:border-white/10'
-                                                    }`}
-                                            >
-                                                {topic}
-                                                {selectedTopics.includes(topic) && <Icon name="check" className="w-4 h-4 text-ae-blue" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    
-                                    {/* Custom Topic Input */}
-                                    <div className="mt-4 pt-4 border-t border-white/5">
-                                        <label className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2 block">Something else?</label>
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
-                                                value={customTopic}
-                                                onChange={(e) => setCustomTopic(e.target.value)}
-                                                placeholder="e.g. Plugin workflows, 3D Element..."
-                                                className="flex-1 bg-ae-panel border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-ae-purple focus:ring-1 focus:ring-ae-purple transition-all"
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-
-                                {/* Submit */}
-                                <div className="pt-6">
-                                    <button
-                                        onClick={handleSubmit}
-                                        disabled={submitting}
-                                        className="w-full py-4 rounded-xl bg-gradient-to-r from-ae-purple to-purple-600 text-white font-bold text-lg shadow-lg hover:shadow-ae-purple/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {submitting ? (
-                                            <>
-                                                <Icon name="loader-2" className="w-5 h-5 animate-spin" /> Saving...
-                                            </>
-                                        ) : (
-                                            <>
-                                                Submit Vote <Icon name="send" className="w-5 h-5" />
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="animate-fade-in space-y-8">
-                                {/* Results View */}
-                                <div className="text-center p-6 bg-green-500/10 border border-green-500/20 rounded-xl mb-8">
-                                    <h2 className="text-xl font-bold text-green-400 mb-1">Vote Recorded!</h2>
-                                    <p className="text-sm text-gray-400">Thanks for helping shape the workshop. Here is the current breakdown.</p>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    
-                                    {/* Skill Breakdown */}
-                                    <div className="glass-panel p-6 rounded-2xl">
-                                        <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-6 flex items-center gap-2">
-                                            <Icon name="bar-chart-2" className="w-4 h-4" /> Team Skill Level
-                                        </h3>
-                                        <div className="space-y-5">
-                                            {SKILL_LEVELS.map(lvl => {
-                                                const count = results?.skillCounts[lvl.id] || 0;
-                                                const pct = results?.total ? (count / results.total) * 100 : 0;
-                                                return (
-                                                    <div key={lvl.id}>
-                                                        <div className="flex justify-between text-sm mb-2">
-                                                            <span className="text-white">{lvl.label}</span>
-                                                            <span className="text-gray-400">{count} votes</span>
-                                                        </div>
-                                                        <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-                                                            <div 
-                                                                className="h-full bg-ae-purple transition-all duration-1000 ease-out" 
-                                                                style={{ width: `${pct}%` }}
-                                                            ></div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* Top Topics */}
-                                    <div className="glass-panel p-6 rounded-2xl">
-                                        <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-6 flex items-center gap-2">
-                                            <Icon name="list" className="w-4 h-4" /> Top Requests
-                                        </h3>
-                                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                                            {results?.rankedTopics.length > 0 ? results.rankedTopics.map((topic, i) => (
-                                                <div key={topic.name} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                                                    <div className={`
-                                                        w-8 h-8 rounded flex items-center justify-center text-sm font-bold
-                                                        ${i === 0 ? 'bg-yellow-500 text-black' : 
-                                                          i === 1 ? 'bg-gray-400 text-black' : 
-                                                          i === 2 ? 'bg-orange-700 text-white' : 'bg-white/10 text-gray-400'}
-                                                    `}>
-                                                        {i + 1}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-sm font-medium text-white truncate" title={topic.name}>
-                                                            {topic.name}
-                                                        </div>
-                                                    </div>
-                                                    <div className="px-2 py-1 rounded bg-black/30 text-xs font-mono text-gray-400">
-                                                        {topic.count}
-                                                    </div>
-                                                </div>
-                                            )) : (
-                                                <div className="text-gray-500 text-sm italic">No topics voted on yet.</div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                </div>
-                                <div className="text-center pt-8">
-                                    <div className="inline-block px-4 py-2 rounded-full bg-white/5 text-xs text-gray-500">
-                                        Total Votes: <span className="text-white font-bold">{results?.total || 0}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        
-                    </div>
-                </div>
-            );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function setupRealtimeListener() {
+            // Path: /artifacts/{appId}/public/data/{collectionName}
+            // Note: Since this is a public GitHub page app, we use 'public' segment
+            const q = collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME);
+
+            onSnapshot(q, (snapshot) => {
+                const docs = [];
+                snapshot.forEach((doc) => {
+                    docs.push(doc.data());
+                });
+                renderResults(docs);
+            }, (error) => {
+                console.error("Listener Error:", error);
+            });
+        }
+
+        // DOM FUNCTIONS (Exposed to window for onclick)
+        window.selectSkill = (skill) => {
+            selectedSkill = skill;
+            // Visual Update
+            document.querySelectorAll('.skill-btn').forEach(btn => btn.classList.remove('selected', 'border-ae-purple'));
+            const btn = document.getElementById(`skill-${skill}`);
+            btn.classList.add('selected');
+        }
+
+        window.toggleTopic = (el, topic) => {
+            if (selectedTopics.includes(topic)) {
+                selectedTopics = selectedTopics.filter(t => t !== topic);
+                el.classList.remove('selected');
+                el.querySelector('.check-circle').classList.remove('bg-ae-purple', 'border-transparent');
+                el.querySelector('.check-circle i').classList.add('opacity-0');
+            } else {
+                selectedTopics.push(topic);
+                el.classList.add('selected');
+                el.querySelector('.check-circle').classList.add('bg-ae-purple', 'border-transparent');
+                el.querySelector('.check-circle i').classList.remove('opacity-0');
+            }
+        }
+
+        window.submitVote = async () => {
+            const btn = document.getElementById('submit-btn');
+            const errorMsg = document.getElementById('error-msg');
+            const customSuggestion = document.getElementById('custom-suggestion').value;
+
+            // Validation
+            if (!selectedSkill) {
+                errorMsg.innerText = "Please select your skill level first.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            if (selectedTopics.length === 0 && !customSuggestion) {
+                errorMsg.innerText = "Please pick at least one topic or write a suggestion.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                // Following strict path: artifacts/{appId}/public/data/{collection}
+                const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME);
+                
+                await addDoc(colRef, {
+                    skillLevel: selectedSkill,
+                    topics: selectedTopics,
+                    suggestion: customSuggestion,
+                    userId: currentUser ? currentUser.uid : 'anon',
+                    timestamp: serverTimestamp()
+                });
+
+                // Success
+                localStorage.setItem('ae_workshop_voted', 'true');
+                showResultsView();
+
+            } catch (error) {
+                console.error("Write Error:", error);
+                errorMsg.innerText = "Error saving vote. Check console.";
+                errorMsg.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = 'Try Again';
+            }
+        }
+
+        function showResultsView() {
+            document.getElementById('survey-form').classList.add('hidden');
+            document.getElementById('results-dashboard').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // RENDER LOGIC
+        function renderResults(data) {
+            if (data.length === 0) return;
+
+            document.getElementById('total-voters').innerText = data.length;
+
+            // 1. Process Skills
+            const skillCounts = { Newbie: 0, Dabbler: 0, Pro: 0 };
+            data.forEach(d => {
+                if (skillCounts[d.skillLevel] !== undefined) skillCounts[d.skillLevel]++;
+            });
+
+            const skillBar = document.getElementById('skill-bar-container');
+            const skillLegend = document.getElementById('skill-legend');
+            
+            // Calculate percentages
+            const pNew = (skillCounts.Newbie / data.length) * 100;
+            const pDab = (skillCounts.Dabbler / data.length) * 100;
+            const pPro = (skillCounts.Pro / data.length) * 100;
+
+            skillBar.innerHTML = `
+                <div style="width:${pNew}%" class="h-full bg-blue-500"></div>
+                <div style="width:${pDab}%" class="h-full bg-purple-500"></div>
+                <div style="width:${pPro}%" class="h-full bg-pink-500"></div>
+            `;
+            
+            skillLegend.innerHTML = `
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Newbie (${skillCounts.Newbie})</div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Dabbler (${skillCounts.Dabbler})</div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-pink-500"></span> Pro (${skillCounts.Pro})</div>
+            `;
+
+            // 2. Process Topics
+            const topicCounts = {};
+            data.forEach(d => {
+                if (d.topics && Array.isArray(d.topics)) {
+                    d.topics.forEach(t => {
+                        topicCounts[t] = (topicCounts[t] || 0) + 1;
+                    });
+                }
+            });
+
+            // Sort topics
+            const sortedTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]);
+            const maxVotes = sortedTopics.length > 0 ? sortedTopics[0][1] : 1;
+
+            const rankingsHTML = sortedTopics.map(([topic, count]) => {
+                const width = (count / data.length) * 100; // Relative to total voters
+                return `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-semibold text-gray-200">${topic}</span>
+                            <span class="text-ae-purple font-mono">${count}</span>
+                        </div>
+                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-ae-accent rounded-full progress-bar" style="width: ${width}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('topic-rankings').innerHTML = rankingsHTML || '<div class="text-gray-500 italic">No topics selected yet.</div>';
+
+            // 3. Process Suggestions
+            const suggestionsHTML = data
+                .filter(d => d.suggestion && d.suggestion.trim().length > 0)
+                .map(d => `
+                    <div class="bg-ae-panel border border-gray-700 p-3 rounded text-sm text-gray-300">
+                        "${d.suggestion}"
+                    </div>
+                `).join('');
+            
+            document.getElementById('suggestions-feed').innerHTML = suggestionsHTML || '<div class="text-gray-500 italic text-sm">No written suggestions yet.</div>';
+        }
+
+        // Start
+        init();
+
     </script>
 </body>
 </html>
