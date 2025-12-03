@@ -1,407 +1,461 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AE Workshop Requests</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+import React, { useState, useEffect, useMemo } from 'react';
+import { initializeApp } from "firebase/app";
+import { 
+  getAuth, 
+  signInAnonymously, 
+  onAuthStateChanged 
+} from "firebase/auth";
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  arrayUnion, 
+  arrayRemove, 
+  onSnapshot, 
+  serverTimestamp,
+  deleteDoc
+} from "firebase/firestore";
+import { 
+  Vote, 
+  MessageSquarePlus, 
+  Plus, 
+  Layers, 
+  Sparkles, 
+  Trash2, 
+  ThumbsUp, 
+  Check,
+  Zap,
+  Box,
+  Smartphone,
+  MousePointer
+} from 'lucide-react';
 
-    <style>
-        /* --- 1. AMBIENT BACKGROUND ANIMATION --- */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050508;
-            color: #e2e8f0;
-            overflow-x: hidden;
-            position: relative;
-        }
+// --- Firebase Configuration ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAubPtprKuQ_ky5AAboUbZHtu4AFbNVHqA",
+  authDomain: "ae-workshop.firebaseapp.com",
+  projectId: "ae-workshop",
+  storageBucket: "ae-workshop.firebasestorage.app",
+  messagingSenderId: "996938664906",
+  appId: "1:996938664906:web:cc1277c3a33f0d93e59d33"
+};
 
-        .aurora-blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
-            z-index: -1;
-            animation: float 10s infinite ease-in-out alternate;
-        }
-        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #4f46e5; animation-delay: 0s; }
-        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #7c3aed; animation-delay: -5s; }
-        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background: #2563eb; opacity: 0.2; animation-duration: 15s; }
+// --- Initialization ---
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 50px) scale(1.1); }
-        }
+// Use a fallback appId if the global one isn't available
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'ae-workshop-default';
 
-        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+// --- Default Suggestions for Quick Add ---
+const PRESETS = [
+  { title: "UI Micro-interactions", icon: <MousePointer size={18} /> },
+  { title: "Lottie & Bodymovin Export", icon: <Zap size={18} /> },
+  { title: "3D Camera & Layers", icon: <Box size={18} /> },
+  { title: "Motion Systems for Design Systems", icon: <Layers size={18} /> },
+  { title: "Mobile Gestures & Touch", icon: <Smartphone size={18} /> },
+  { title: "Text Animators & Kinetic Type", icon: <Sparkles size={18} /> },
+];
 
-        /* Glassmorphism */
-        .glass-panel {
-            background: rgba(20, 21, 31, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
-        }
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [topics, setTopics] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  
+  // Form states
+  const [newTopic, setNewTopic] = useState("");
+  const [newSuggestion, setNewSuggestion] = useState("");
+  const [userName, setUserName] = useState("");
+  const [activeTab, setActiveTab] = useState('topics'); // 'topics' or 'feedback'
 
-        /* --- 2. STAGGERED ENTRANCE --- */
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .list-card {
-            animation: slideUpFade 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            opacity: 0; /* Start hidden */
-        }
+  // --- Auth & Data Listeners ---
+  useEffect(() => {
+    // 1. Authenticate
+    const initAuth = async () => {
+      // In this environment, we usually just sign in anonymously for simplicity
+      // unless a custom token is provided.
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        // If there's a token (rare in this specific snippet context but good practice), use it
+        // Note: verify signInWithCustomToken is imported if used, otherwise fallback:
+        await signInAnonymously(auth);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
 
-        /* --- UI POLISH --- */
-        .text-gradient {
-            background: linear-gradient(135deg, #CF9FFF 0%, #5B7FFF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    initAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsubscribeAuth();
+  }, []);
 
-        .btn-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-gradient:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
-        }
+  useEffect(() => {
+    if (!user) return;
 
-        /* Vote Button Logic */
-        .vote-btn { transition: all 0.2s; cursor: pointer; }
-        .vote-btn.has-voted {
-            background-color: rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.5);
-        }
-        .vote-btn.has-voted i, .vote-btn.has-voted span { color: #34d399; }
+    // 2. Listen to Topics
+    // PATH: artifacts/{appId}/public/data/topics
+    const topicsRef = collection(db, 'artifacts', appId, 'public', 'data', 'topics');
+    const unsubscribeTopics = onSnapshot(topicsRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTopics(data);
+    }, (error) => console.error("Topics Error:", error));
 
-        /* Admin Controls */
-        .admin-controls { display: none !important; }
-        .admin-badge { display: none; }
-        body.is-admin .admin-controls { display: flex !important; }
-        body.is-admin .admin-badge { display: inline-block; }
-    </style>
-</head>
-<body class="min-h-screen pb-12 flex flex-col">
+    // 3. Listen to Suggestions/Questions
+    // PATH: artifacts/{appId}/public/data/suggestions
+    const suggestionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'suggestions');
+    const unsubscribeSuggestions = onSnapshot(suggestionsRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setSuggestions(data);
+    }, (error) => console.error("Suggestions Error:", error));
 
-    <div class="aurora-blob blob-1"></div>
-    <div class="aurora-blob blob-2"></div>
-    <div class="aurora-blob blob-3"></div>
+    return () => {
+      unsubscribeTopics();
+      unsubscribeSuggestions();
+    };
+  }, [user]);
 
-    <main class="max-w-3xl mx-auto px-4 pt-12 sm:pt-20 flex-grow w-full relative z-10">
+  // --- Actions ---
+
+  const handleAddTopic = async (title) => {
+    if (!title.trim() || !user) return;
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'topics'), {
+        title: title.trim(),
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+        voters: [user.uid] // Auto-vote for your own creation
+      });
+      setNewTopic("");
+    } catch (e) {
+      console.error("Error adding topic:", e);
+    }
+  };
+
+  const handleVote = async (topic) => {
+    if (!user) return;
+    const topicRef = doc(db, 'artifacts', appId, 'public', 'data', 'topics', topic.id);
+    const hasVoted = topic.voters?.includes(user.uid);
+
+    try {
+      if (hasVoted) {
+        await updateDoc(topicRef, {
+          voters: arrayRemove(user.uid)
+        });
+      } else {
+        await updateDoc(topicRef, {
+          voters: arrayUnion(user.uid)
+        });
+      }
+    } catch (e) {
+      console.error("Error voting:", e);
+    }
+  };
+
+  const handleAddSuggestion = async (e) => {
+    e.preventDefault();
+    if (!newSuggestion.trim() || !user) return;
+
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'suggestions'), {
+        text: newSuggestion.trim(),
+        authorName: userName || "Anonymous Designer",
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+      });
+      setNewSuggestion("");
+    } catch (e) {
+      console.error("Error adding suggestion:", e);
+    }
+  };
+
+  const handleDeleteTopic = async (topicId) => {
+    if (!user) return;
+    // Simple admin check: in a real app, use security rules. 
+    // Here we allow deletion if you created it or just for demo purposes anyone.
+    // Let's restricting to creator for better UX.
+    const topic = topics.find(t => t.id === topicId);
+    if (topic && topic.createdBy === user.uid) {
+        try {
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'topics', topicId));
+        } catch (e) { console.error(e); }
+    }
+  };
+
+  // --- Derived State ---
+  const sortedTopics = useMemo(() => {
+    return [...topics].sort((a, b) => {
+      const votesA = a.voters?.length || 0;
+      const votesB = b.voters?.length || 0;
+      return votesB - votesA; // Descending
+    });
+  }, [topics]);
+
+  // Check if a preset is already in the list to avoid dupes
+  const isPresetActive = (presetTitle) => {
+    return topics.some(t => t.title.toLowerCase() === presetTitle.toLowerCase());
+  };
+
+
+  // --- UI ---
+  
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-purple-200 flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-12 w-12 bg-purple-600 rounded-lg mb-4 shadow-[0_0_30px_rgba(147,51,234,0.5)]"></div>
+          <p>Initializing Workshop Hub...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-purple-500 selection:text-white">
+      {/* Header */}
+      <header className="bg-zinc-900/50 border-b border-zinc-800 backdrop-blur-md sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-700 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/20 text-white font-bold text-xl">
+              Ae
+            </div>
+            <div>
+              <h1 className="font-bold text-lg leading-tight text-zinc-100">Workshop Planner</h1>
+              <p className="text-xs text-zinc-400">For Product Design Team</p>
+            </div>
+          </div>
+          
+          <div className="flex bg-zinc-800 p-1 rounded-lg">
+            <button 
+              onClick={() => setActiveTab('topics')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'topics' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              Curriculum
+            </button>
+            <button 
+              onClick={() => setActiveTab('feedback')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'feedback' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              Q&A
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 py-8">
         
-        <header class="text-center mb-12 relative">
-            <div class="inline-block mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-md">
-                Internal Workshop
-            </div>
-            <div class="admin-badge absolute top-0 right-0 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/50 uppercase tracking-widest font-bold backdrop-blur-md">Admin Mode</div>
+        {/* TOPICS TAB */}
+        {activeTab === 'topics' && (
+          <div className="space-y-12">
             
-            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white mb-4 drop-shadow-lg">
-                <span class="text-gradient">Ae</span> Training
-            </h1>
-            <p class="text-gray-300/80 text-lg sm:text-xl max-w-lg mx-auto leading-relaxed font-light">
-                Shape the agenda. Add topics, drop links, and vote for the winners.
-            </p>
-        </header>
+            {/* Intro / CTA */}
+            <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/10 rounded-2xl p-6 border border-purple-500/20">
+              <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                <Sparkles className="text-purple-400" size={20}/> 
+                What do you want to learn?
+              </h2>
+              <p className="text-zinc-400 mb-6 text-sm max-w-2xl">
+                Vote on the topics below that would be most useful for your daily work. 
+                Feel free to add specific techniques or plugins you're curious about.
+              </p>
 
-        <section class="glass-panel rounded-2xl p-1 mb-12 transform transition-all hover:scale-[1.01] duration-500">
-            <div class="p-6 sm:p-8">
-                <div class="flex items-center gap-2 mb-6">
-                    <i class="ph-bold ph-plus-circle text-indigo-400 text-xl"></i>
-                    <h2 class="text-lg font-bold text-white">Suggest a Topic</h2>
+              {/* Quick Add Presets */}
+              <div className="flex flex-wrap gap-2">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.title}
+                    disabled={isPresetActive(preset.title)}
+                    onClick={() => handleAddTopic(preset.title)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all
+                      ${isPresetActive(preset.title) 
+                        ? 'bg-zinc-800/50 border-zinc-800 text-zinc-500 cursor-default' 
+                        : 'bg-zinc-900 border-zinc-700 text-purple-300 hover:border-purple-500 hover:bg-purple-900/20 active:scale-95'
+                      }`}
+                  >
+                    {isPresetActive(preset.title) ? <Check size={12}/> : <Plus size={12}/>}
+                    {preset.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Voting List */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Topic Leaderboard</h3>
+                <span className="text-xs text-zinc-600">{sortedTopics.length} topics</span>
+              </div>
+
+              {sortedTopics.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-xl">
+                  <p className="text-zinc-500">No topics yet. Start by adding one!</p>
                 </div>
-                
-                <div class="space-y-4">
-                    <div class="relative group">
-                        <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg opacity-30 blur group-focus-within:opacity-100 transition duration-500"></div>
-                        <input type="text" id="topicInput" placeholder="e.g. Advanced Masking & Rotoscoping..." 
-                            class="relative w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg px-5 py-4 outline-none border border-gray-700/50 focus:border-indigo-500 transition-all focus:bg-[#1a1c26]">
-                    </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sortedTopics.map((topic) => {
+                    const votes = topic.voters?.length || 0;
+                    const hasVoted = topic.voters?.includes(user.uid);
+                    const isCreator = topic.createdBy === user.uid;
 
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="relative flex-1">
-                            <i class="ph ph-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                            <input type="url" id="linkInput" placeholder="Reference URL (Optional)" 
-                                class="w-full bg-[#13141c] text-white placeholder-gray-500 rounded-lg pl-10 pr-5 py-3.5 outline-none border border-gray-700/50 focus:border-indigo-500 transition-all text-sm focus:bg-[#1a1c26]">
+                    return (
+                      <div 
+                        key={topic.id} 
+                        className={`relative group flex items-start justify-between p-4 rounded-xl border transition-all duration-200
+                          ${hasVoted 
+                            ? 'bg-purple-900/10 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.1)]' 
+                            : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                          }`}
+                      >
+                        <div className="flex-1 pr-4">
+                          <h4 className={`font-medium ${hasVoted ? 'text-white' : 'text-zinc-300'}`}>
+                            {topic.title}
+                          </h4>
+                          {votes > 0 && (
+                            <div className="flex -space-x-1 mt-3">
+                                {[...Array(Math.min(votes, 5))].map((_, i) => (
+                                    <div key={i} className="w-5 h-5 rounded-full bg-zinc-700 border border-zinc-900 flex items-center justify-center text-[8px] text-zinc-400">
+                                        <div className="w-2 h-2 rounded-full bg-purple-400/50"></div>
+                                    </div>
+                                ))}
+                                {votes > 5 && (
+                                    <div className="w-5 h-5 rounded-full bg-zinc-800 border border-zinc-900 flex items-center justify-center text-[9px] text-zinc-500">
+                                        +
+                                    </div>
+                                )}
+                            </div>
+                          )}
                         </div>
-                        <button id="addBtn" class="btn-gradient text-white font-bold py-3.5 px-8 rounded-lg shadow-lg flex items-center justify-center gap-2 sm:w-auto w-full">
-                            <span>Submit</span>
-                            <i class="ph-bold ph-arrow-right"></i>
-                        </button>
-                    </div>
+
+                        <div className="flex flex-col items-end gap-2">
+                            <button
+                                onClick={() => handleVote(topic)}
+                                className={`flex flex-col items-center justify-center w-12 h-12 rounded-lg transition-all active:scale-95
+                                ${hasVoted 
+                                    ? 'bg-purple-600 text-white shadow-lg' 
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                }`}
+                            >
+                                <Vote size={18} />
+                                <span className="text-xs font-bold mt-1">{votes}</span>
+                            </button>
+                            
+                            {isCreator && (
+                                <button 
+                                    onClick={() => handleDeleteTopic(topic.id)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 transition-opacity"
+                                    title="Delete topic"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="flex items-baseline justify-between mb-6 px-2">
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i class="ph-fill ph-list-dashes text-indigo-500"></i> Request List
-                </h2>
-                <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Ranked by Interest</span>
+              )}
             </div>
 
-            <ul id="topicList" class="space-y-4 pb-10">
-                <li class="glass-panel rounded-xl p-6 animate-pulse flex items-center justify-between">
-                    <div class="h-4 bg-gray-700 rounded w-1/3"></div>
-                    <div class="h-8 w-8 bg-gray-700 rounded-full"></div>
-                </li>
-            </ul>
-        </section>
-    </main>
+            {/* Manual Add */}
+            <div className="pt-8 border-t border-zinc-800">
+              <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-4">Add Custom Topic</h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTopic}
+                  onChange={(e) => setNewTopic(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTopic(newTopic)}
+                  placeholder="e.g. Exporting JSON for iOS..."
+                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                />
+                <button
+                  onClick={() => handleAddTopic(newTopic)}
+                  disabled={!newTopic.trim()}
+                  className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-    <footer class="text-center py-6 text-gray-500 relative z-10">
-        <button id="adminToggle" class="hover:text-gray-300 transition p-2" title="Admin Login">
-            <i class="ph-bold ph-lock-key"></i>
-        </button>
-    </footer>
+        {/* FEEDBACK TAB */}
+        {activeTab === 'feedback' && (
+          <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+             <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-2 text-white">Open Q&A</h2>
+                <p className="text-zinc-400">Ask specific questions or suggest format ideas (e.g., "Can we do a session on Fridays?").</p>
+             </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+             <form onSubmit={handleAddSuggestion} className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl">
+                <div className="mb-4">
+                    <label className="block text-xs font-medium text-zinc-500 mb-1 uppercase">Your Name (Optional)</label>
+                    <input 
+                        type="text" 
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Anonymous"
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    />
+                </div>
+                <div className="mb-4">
+                    <label className="block text-xs font-medium text-zinc-500 mb-1 uppercase">Suggestion / Question</label>
+                    <textarea 
+                        value={newSuggestion}
+                        onChange={(e) => setNewSuggestion(e.target.value)}
+                        placeholder="I really struggle with..."
+                        rows={3}
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <button 
+                        type="submit"
+                        disabled={!newSuggestion.trim()}
+                        className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <MessageSquarePlus size={16} />
+                        Post Note
+                    </button>
+                </div>
+             </form>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
-            authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
-            projectId: "aftereffectsworkshop-ab75f",
-            storageBucket: "aftereffectsworkshop-ab75f.firebasestorage.app",
-            messagingSenderId: "522266658938",
-            appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const colRef = collection(db, 'topics');
-
-        const topicInput = document.getElementById('topicInput');
-        const linkInput = document.getElementById('linkInput');
-        const addBtn = document.getElementById('addBtn');
-        const topicList = document.getElementById('topicList');
-        
-        function getLocalVotes() {
-            return JSON.parse(localStorage.getItem('ae_workshop_votes')) || [];
-        }
-
-        const SECRET_CODE = "motion"; 
-        let isAdmin = false;
-
-        document.getElementById('adminToggle').addEventListener('click', () => {
-            if(isAdmin) {
-                isAdmin = false;
-                document.body.classList.remove('is-admin');
-                alert("Admin mode disabled");
-            } else {
-                const code = prompt("Enter Admin Password:");
-                if(code === SECRET_CODE) {
-                    isAdmin = true;
-                    document.body.classList.add('is-admin');
-                    alert("Admin mode enabled!");
-                }
-            }
-        });
-
-        addBtn.addEventListener('click', async () => {
-            const topicText = topicInput.value.trim();
-            let linkText = linkInput.value.trim();
-
-            if (!topicText) {
-                topicInput.parentElement.classList.add('animate-bounce');
-                setTimeout(() => topicInput.parentElement.classList.remove('animate-bounce'), 500);
-                return;
-            }
-
-            if (linkText && !linkText.startsWith('http')) {
-                linkText = 'https://' + linkText;
-            }
-
-            try {
-                addBtn.disabled = true;
-                addBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
-                
-                const docRef = await addDoc(colRef, {
-                    title: topicText,
-                    link: linkText,
-                    votes: 1, 
-                    createdAt: serverTimestamp()
-                });
-
-                const currentVotes = getLocalVotes();
-                currentVotes.push(docRef.id);
-                localStorage.setItem('ae_workshop_votes', JSON.stringify(currentVotes));
-
-                topicInput.value = '';
-                linkInput.value = '';
-            } catch (err) {
-                console.error(err);
-                alert("Error adding topic.");
-            } finally {
-                addBtn.disabled = false;
-                addBtn.innerHTML = `<span>Submit</span><i class="ph-bold ph-check"></i>`;
-                setTimeout(() => {
-                    addBtn.innerHTML = `<span>Submit</span><i class="ph-bold ph-arrow-right"></i>`;
-                }, 2000);
-            }
-        });
-
-        // --- RENDER LOGIC ---
-        const q = query(colRef, orderBy("votes", "desc"));
-
-        onSnapshot(q, (snapshot) => {
-            topicList.innerHTML = '';
-            
-            const topics = [];
-            snapshot.docs.forEach(doc => topics.push({ ...doc.data(), id: doc.id }));
-            
-            const myVotes = getLocalVotes();
-
-            if(topics.length === 0) {
-                topicList.innerHTML = `
-                    <div class="text-center py-12 opacity-50">
-                        <i class="ph-duotone ph-ghost text-4xl mb-2"></i>
-                        <p>No topics found. Start the list!</p>
-                    </div>`;
-                return;
-            }
-
-            // --- 2. DATA VIZ LOGIC (Max Votes) ---
-            const maxVotes = topics[0].votes > 0 ? topics[0].votes : 1;
-
-            topics.forEach((topic, index) => {
-                const li = document.createElement('li');
-                // Added overflow-hidden for the progress bar
-                li.className = "list-card glass-panel rounded-xl p-5 flex items-center justify-between gap-4 group relative overflow-hidden";
-                
-                // Add staggered animation delay based on index
-                li.style.animationDelay = `${index * 0.05}s`;
-
-                // --- 2. PROGRESS BAR (Background) ---
-                // Calculates width percentage relative to the top voted item
-                const progressWidth = (topic.votes / maxVotes) * 100;
-                const progressBar = `
-                    <div class="absolute top-0 bottom-0 left-0 bg-indigo-500/5 z-0 transition-all duration-1000 ease-out" style="width: ${progressWidth}%"></div>
-                `;
-
-                let rankColor = "text-gray-500";
-                if(index === 0) rankColor = "text-yellow-400";
-                if(index === 1) rankColor = "text-gray-300";
-                if(index === 2) rankColor = "text-orange-400";
-
-                const linkBadge = topic.link 
-                    ? `<a href="${topic.link}" target="_blank" class="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs rounded-full transition-colors relative z-10" onclick="event.stopPropagation();">
-                         <i class="ph-bold ph-link"></i> Reference
-                       </a>` 
-                    : '';
-
-                const hasVoted = myVotes.includes(topic.id);
-                const voteIcon = hasVoted ? "ph-check-fat" : "ph-caret-up";
-                const voteClass = hasVoted ? "has-voted" : "hover:bg-[#252836] hover:border-indigo-500/30 active:scale-95";
-
-                li.innerHTML = `
-                    ${progressBar} <div class="flex items-start gap-4 flex-1 min-w-0 relative z-10">
-                        <span class="text-xl font-black ${rankColor} opacity-50 font-mono mt-0.5 w-6 text-right">#${index + 1}</span>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-lg font-medium text-gray-100 leading-tight break-words group-hover:text-white transition-colors">
-                                ${escapeHtml(topic.title)}
-                            </h3>
-                            ${linkBadge}
+             <div className="space-y-4">
+                {suggestions.length === 0 ? (
+                    <div className="text-center text-zinc-600 py-8">No notes yet.</div>
+                ) : (
+                    suggestions
+                        .sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                        .map(note => (
+                        <div key={note.id} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex gap-4">
+                            <div className="mt-1 min-w-[32px] min-h-[32px] w-8 h-8 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400 border border-zinc-700">
+                                {note.authorName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-zinc-200">{note.authorName}</span>
+                                    <span className="text-xs text-zinc-600">
+                                        {note.createdAt ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                    </span>
+                                </div>
+                                <p className="text-zinc-400 text-sm leading-relaxed">{note.text}</p>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 relative z-10">
-                        <div class="admin-controls flex items-center gap-2 mr-2">
-                             <button class="edit-count-btn p-2 text-purple-400 hover:text-white bg-purple-500/10 hover:bg-purple-600 rounded-lg transition" title="Edit Votes" data-id="${topic.id}" data-votes="${topic.votes}"><i class="ph-bold ph-hash"></i></button>
-                            <button class="edit-btn p-2 text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-600 rounded-lg transition" data-id="${topic.id}" data-title="${escapeHtml(topic.title)}" data-link="${escapeHtml(topic.link || '')}"><i class="ph-bold ph-pencil-simple"></i></button>
-                            <button class="delete-btn p-2 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-lg transition" data-id="${topic.id}"><i class="ph-bold ph-trash"></i></button>
-                        </div>
-
-                        <button class="vote-btn ${voteClass} flex flex-col items-center justify-center bg-[#1a1c26]/80 backdrop-blur-sm border border-gray-700/50 w-14 h-14 rounded-xl" data-id="${topic.id}">
-                            <i class="ph-bold ${voteIcon} text-indigo-400 text-lg mb-[-4px]"></i>
-                            <span class="font-bold text-white text-sm">${topic.votes}</span>
-                        </button>
-                    </div>
-                `;
-                topicList.appendChild(li);
-            });
-
-            attachListeners();
-        });
-
-        function attachListeners() {
-            document.querySelectorAll('.vote-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = e.currentTarget.getAttribute('data-id');
-                    toggleVote(id);
-                });
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(!isAdmin) return;
-                    if(confirm("Delete this topic?")) {
-                        await deleteDoc(doc(db, 'topics', e.currentTarget.getAttribute('data-id')));
-                    }
-                });
-            });
-
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(!isAdmin) return;
-                    const id = e.currentTarget.getAttribute('data-id');
-                    const currentTitle = e.currentTarget.getAttribute('data-title').replace(/&quot;/g, '"').replace(/&amp;/g, '&'); 
-                    const currentLink = e.currentTarget.getAttribute('data-link').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-                    const newTitle = prompt("Edit Topic:", currentTitle);
-                    if (newTitle === null) return; 
-                    const newLink = prompt("Edit Link:", currentLink);
-                    if (newLink === null) return; 
-                    await updateDoc(doc(db, 'topics', id), { title: newTitle, link: newLink });
-                });
-            });
-
-            document.querySelectorAll('.edit-count-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    if(!isAdmin) return;
-                    const id = e.currentTarget.getAttribute('data-id');
-                    const currentVotes = e.currentTarget.getAttribute('data-votes');
-                    const newCount = prompt("Manually set vote count:", currentVotes);
-                    if (newCount !== null && !isNaN(newCount)) {
-                         await updateDoc(doc(db, 'topics', id), { votes: parseInt(newCount) });
-                    }
-                });
-            });
-        }
-
-        async function toggleVote(docId) {
-            let myVotes = getLocalVotes();
-            const hasVoted = myVotes.includes(docId);
-            const docRef = doc(db, 'topics', docId);
-
-            if (hasVoted) {
-                myVotes = myVotes.filter(id => id !== docId);
-                localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
-                await updateDoc(docRef, { votes: increment(-1) });
-            } else {
-                myVotes.push(docId);
-                localStorage.setItem('ae_workshop_votes', JSON.stringify(myVotes));
-                await updateDoc(docRef, { votes: increment(1) });
-            }
-        }
-
-        function escapeHtml(text) {
-            if(!text) return text;
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-        }
-    </script>
-</body>
-</html>
+                    ))
+                )}
+             </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
