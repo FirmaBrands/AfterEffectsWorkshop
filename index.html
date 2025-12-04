@@ -3,308 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>After Effects Workshop | Wishlist</title>
+    <title>After Effects Workshop | Topic Voting</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Admin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
                     colors: {
                         ae: {
-                            dark: '#121212',
-                            panel: '#1e1e1e',
+                            dark: '#161616',
+                            panel: '#232323',
+                            light: '#cfcfcf',
                             purple: '#9999FF',
-                            blue: '#00C8FF',
-                            accent: '#6e6eff'
+                            accent: '#00D8A5',
+                            hover: '#3a3a3a'
                         }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
+
     <style>
         body {
             background-color: #121212;
             color: #e0e0e0;
         }
-        .ae-card {
-            transition: all 0.2s ease;
-            border: 1px solid #333;
-        }
-        .ae-card:hover {
-            border-color: #555;
-            transform: translateY(-2px);
-        }
-        .ae-card.selected {
-            border-color: #9999FF;
-            background-color: rgba(153, 153, 255, 0.1);
-            box-shadow: 0 0 15px rgba(153, 153, 255, 0.2);
-        }
-        .ae-btn {
-            background: linear-gradient(90deg, #6e6eff 0%, #9999FF 100%);
-            transition: opacity 0.2s;
-        }
-        .ae-btn:hover {
-            opacity: 0.9;
-        }
-        .progress-bar {
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        /* Custom Scrollbar */
+        
+        /* AE-like scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #121212;
+            background: #161616; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #333;
+            background: #444; 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #444;
+            background: #555; 
         }
-        .glass-panel {
-            background: rgba(30, 30, 30, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
+
+        .topic-card {
+            transition: all 0.2s ease;
         }
+        .topic-card:active {
+            transform: scale(0.98);
+        }
+
+        .slot-active {
+            border-color: #9999FF;
+            box-shadow: 0 0 15px rgba(153, 153, 255, 0.2);
+        }
+
+        /* Loaders */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #9999FF;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-ae-purple selection:text-black">
+<body class="min-h-screen flex flex-col font-sans text-sm selection:bg-ae-purple selection:text-black">
 
     <!-- Header -->
-    <header class="w-full p-6 border-b border-gray-800 bg-ae-panel sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
+    <header class="bg-ae-dark border-b border-gray-800 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#00005b] border-2 border-ae-purple rounded flex items-center justify-center text-ae-purple font-bold text-xl shadow-[0_0_10px_rgba(153,153,255,0.4)]">
-                    Ae
+                <div class="w-10 h-10 bg-[#00005b] rounded-md flex items-center justify-center border border-ae-purple shadow-[0_0_10px_rgba(153,153,255,0.3)]">
+                    <span class="text-ae-purple font-bold text-lg">Ae</span>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide">Workshop Wishlist</h1>
-                    <p class="text-xs text-gray-400">Design Team Training</p>
+                    <h1 class="font-bold text-lg tracking-wide text-white">Workshop Planner</h1>
+                    <p class="text-xs text-gray-400">Vote for what you want to learn</p>
                 </div>
             </div>
-            <div id="connection-status" class="text-xs text-green-500 flex items-center gap-2 opacity-0 transition-opacity">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Live
-            </div>
+            <div id="userInfo" class="text-xs text-gray-500"></div>
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow p-4 md:p-8">
-        <div class="max-w-3xl mx-auto space-y-12">
+        <div class="max-w-5xl mx-auto space-y-12">
 
-            <!-- Intro -->
-            <div class="text-center space-y-4 py-8">
-                <h2 class="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-ae-blue to-ae-purple">
-                    What do you want to create?
+            <!-- Section 1: Introduction & Skill Level -->
+            <section id="introSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl">
+                <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
+                    <span class="text-ae-purple mr-2">01.</span> Your Experience
                 </h2>
-                <p class="text-gray-400 max-w-lg mx-auto">
-                    I'm planning an After Effects workshop tailored for us. 
-                    Vote specifically for what will help your workflow the most.
-                </p>
-            </div>
-
-            <!-- FORM SECTION -->
-            <div id="survey-form" class="space-y-10">
+                <p class="text-gray-400 mb-6">Before we dive into topics, how comfortable are you with After Effects right now?</p>
                 
-                <!-- Section 1: Skill Level -->
-                <section>
-                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-white">
-                        <i class="fas fa-layer-group text-ae-purple"></i> 1. Your Current Comfort Level
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button onclick="selectSkill('Newbie')" id="skill-Newbie" class="skill-btn ae-card p-6 rounded-xl text-left group">
-                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-seedling"></i></div>
-                            <div class="font-bold text-lg">Total Newbie</div>
-                            <p class="text-sm text-gray-500 mt-2">I've never opened it / It scares me.</p>
-                        </button>
-                        <button onclick="selectSkill('Dabbler')" id="skill-Dabbler" class="skill-btn ae-card p-6 rounded-xl text-left group">
-                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-hand-pointer"></i></div>
-                            <div class="font-bold text-lg">The Dabbler</div>
-                            <p class="text-sm text-gray-500 mt-2">I can change keyframes and render simple stuff.</p>
-                        </button>
-                        <button onclick="selectSkill('Pro')" id="skill-Pro" class="skill-btn ae-card p-6 rounded-xl text-left group">
-                            <div class="text-2xl mb-2 text-gray-500 group-hover:text-ae-blue transition-colors"><i class="fas fa-magic"></i></div>
-                            <div class="font-bold text-lg">Animation Pro</div>
-                            <p class="text-sm text-gray-500 mt-2">I know the graph editor and shortcuts.</p>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Section 2: Topics -->
-                <section>
-                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-white">
-                        <i class="fas fa-graduation-cap text-ae-purple"></i> 2. What should we cover?
-                        <span class="text-xs font-normal text-gray-500 ml-2">(Select all that apply)</span>
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Topic Items -->
-                        <div onclick="toggleTopic(this, 'UI Animation')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-ae-blue"><i class="fas fa-mouse-pointer"></i></div>
-                                <div>
-                                    <div class="font-semibold">UI Animation Basics</div>
-                                    <div class="text-xs text-gray-500">Easing, timing, & material curves</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-white group-hover:text-ae-accent">Newcomer</span>
+                            <i class="fa-solid fa-seedling text-gray-600 group-hover:text-ae-accent"></i>
                         </div>
-
-                        <div onclick="toggleTopic(this, 'Lottie & Exporting')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-green-400"><i class="fas fa-code"></i></div>
-                                <div>
-                                    <div class="font-semibold">Lottie & Handoff</div>
-                                    <div class="text-xs text-gray-500">Preparing assets for dev implementation</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
-                        </div>
-
-                        <div onclick="toggleTopic(this, 'Micro-interactions')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-yellow-400"><i class="fas fa-toggle-on"></i></div>
-                                <div>
-                                    <div class="font-semibold">Micro-interactions</div>
-                                    <div class="text-xs text-gray-500">Button states, toggles, loaders</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
-                        </div>
-
-                        <div onclick="toggleTopic(this, 'Mockup Compositing')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-pink-400"><i class="fas fa-mobile-alt"></i></div>
-                                <div>
-                                    <div class="font-semibold">Mockup Compositing</div>
-                                    <div class="text-xs text-gray-500">Putting screens onto devices naturally</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
-                        </div>
-
-                        <div onclick="toggleTopic(this, 'Logo Animation')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-orange-400"><i class="fas fa-shapes"></i></div>
-                                <div>
-                                    <div class="font-semibold">Brand/Logo Motion</div>
-                                    <div class="text-xs text-gray-500">Intros, outros, and brand expression</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
-                        </div>
-                        
-                         <div onclick="toggleTopic(this, 'Workflow & Shortcuts')" class="topic-btn ae-card p-4 rounded-lg cursor-pointer flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-gray-800 p-2 rounded text-purple-400"><i class="fas fa-keyboard"></i></div>
-                                <div>
-                                    <div class="font-semibold">Speed Workflow</div>
-                                    <div class="text-xs text-gray-500">Shortcuts, plugins, and productivity</div>
-                                </div>
-                            </div>
-                            <div class="check-circle w-5 h-5 rounded-full border border-gray-600 flex items-center justify-center">
-                                <i class="fas fa-check text-xs text-black opacity-0 transition-opacity"></i>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section 3: Custom -->
-                <section>
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                        <i class="fas fa-comment-dots text-ae-purple"></i> 3. Specific Requests?
-                    </h3>
-                    <div class="glass-panel p-1 rounded-lg">
-                        <textarea id="custom-suggestion" class="w-full bg-ae-dark text-gray-300 p-4 rounded border border-transparent focus:border-ae-purple focus:outline-none h-24 resize-none" placeholder="e.g. How do I make that glowing line effect?"></textarea>
-                    </div>
-                </section>
-
-                <!-- Submit Action -->
-                <div class="pt-6">
-                    <button onclick="submitVote()" id="submit-btn" class="ae-btn w-full py-4 rounded-lg font-bold text-lg text-white shadow-lg transform active:scale-95 flex items-center justify-center gap-2">
-                        <span>Cast Vote</span>
-                        <i class="fas fa-paper-plane"></i>
+                        <p class="text-xs text-gray-500">I've never opened it or only know the very basics.</p>
+                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
                     </button>
-                    <p id="error-msg" class="text-red-500 text-center mt-2 hidden text-sm"></p>
-                </div>
-            </div>
 
-            <!-- RESULTS SECTION (Initially Hidden) -->
-            <div id="results-dashboard" class="hidden space-y-10 animate-fade-in">
-                <div class="bg-green-500/10 border border-green-500/30 p-4 rounded-lg text-green-400 text-center mb-8">
-                    <i class="fas fa-check-circle mr-2"></i> Thanks! Your input has been recorded.
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <h3 class="text-2xl font-bold">Live Results</h3>
-                    <div class="text-sm text-gray-500">Based on <span id="total-voters" class="text-white font-bold">0</span> votes</div>
-                </div>
-
-                <!-- Skill Breakdown -->
-                <div class="glass-panel p-6 rounded-xl">
-                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-4">Class Composition</h4>
-                    <div class="flex h-4 rounded-full overflow-hidden bg-gray-800" id="skill-bar-container">
-                        <!-- Injected via JS -->
-                    </div>
-                    <div class="flex justify-between mt-3 text-sm" id="skill-legend">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-
-                <!-- Topic Rankings -->
-                <div class="glass-panel p-6 rounded-xl">
-                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-6">Most Wanted Topics</h4>
-                    <div class="space-y-4" id="topic-rankings">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-
-                <!-- Suggestions Feed -->
-                <div>
-                    <h4 class="text-gray-400 text-xs uppercase tracking-widest font-bold mb-4">Open Suggestions</h4>
-                    <div class="grid grid-cols-1 gap-3" id="suggestions-feed">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-                
-                 <div class="pt-6 text-center">
-                    <button onclick="window.location.reload()" class="text-gray-500 hover:text-white text-sm underline">
-                        Submit another response
+                    <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-white group-hover:text-ae-accent">Comfortable</span>
+                            <i class="fa-solid fa-layer-group text-gray-600 group-hover:text-ae-accent"></i>
+                        </div>
+                        <p class="text-xs text-gray-500">I know keyframes, layers, and basic rendering.</p>
+                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
                     </button>
+
+                    <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-white group-hover:text-ae-accent">Pro</span>
+                            <i class="fa-solid fa-wand-magic-sparkles text-gray-600 group-hover:text-ae-accent"></i>
+                        </div>
+                        <p class="text-xs text-gray-500">I dream in expressions and graph editors.</p>
+                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                    </button>
+                </div>
+                <input type="hidden" id="selectedSkill" value="">
+            </section>
+
+            <!-- Section 2: Voting -->
+            <section id="votingSection" class="relative">
+                <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2 flex justify-between items-end">
+                    <span><span class="text-ae-purple mr-2">02.</span> Select Your Interests</span>
+                    <span class="text-xs font-normal text-gray-400">Click a topic to add it to your slots</span>
+                </h2>
+
+                <!-- Sticky Slots (Mobile friendly) -->
+                <div class="sticky top-20 z-40 bg-ae-dark/95 backdrop-blur border border-gray-700 p-4 rounded-lg shadow-2xl mb-8">
+                    <div class="grid grid-cols-3 gap-2 md:gap-4">
+                        <!-- Slot 1 -->
+                        <div id="slot-1" onclick="clearSlot(1)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
+                            <div class="text-ae-purple font-bold text-xs md:text-sm uppercase tracking-widest mb-1">1st Choice</div>
+                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
+                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
+                            <div class="hidden absolute -top-3 -right-3 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Gold</div>
+                        </div>
+                        <!-- Slot 2 -->
+                        <div id="slot-2" onclick="clearSlot(2)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
+                            <div class="text-gray-300 font-bold text-xs md:text-sm uppercase tracking-widest mb-1">2nd Choice</div>
+                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
+                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
+                        </div>
+                        <!-- Slot 3 -->
+                        <div id="slot-3" onclick="clearSlot(3)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
+                            <div class="text-yellow-700 font-bold text-xs md:text-sm uppercase tracking-widest mb-1">3rd Choice</div>
+                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
+                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic Grid -->
+                <div class="mb-6 flex justify-between items-center">
+                    <h3 class="text-gray-400 text-sm">Available Topics</h3>
+                    <button onclick="toggleNewTopicForm()" class="text-xs bg-ae-panel hover:bg-gray-700 border border-gray-600 px-3 py-1.5 rounded transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Suggest New
+                    </button>
+                </div>
+
+                <!-- New Topic Form (Hidden) -->
+                <div id="newTopicForm" class="hidden mb-6 bg-ae-panel border border-ae-purple p-4 rounded relative animate-fade-in">
+                    <h4 class="text-white text-sm font-bold mb-2">Suggest a Topic</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="newTopicInput" placeholder="e.g. 3D Camera Tracking..." class="flex-grow bg-ae-dark border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-ae-purple text-sm">
+                        <button onclick="submitNewTopic()" class="bg-ae-purple text-black font-bold px-4 py-2 rounded text-sm hover:bg-white transition-colors">Add</button>
+                    </div>
+                </div>
+
+                <!-- Topics Container -->
+                <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <!-- Topics will be injected here via JS -->
+                    <div class="flex items-center justify-center h-32">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Section -->
+            <section class="flex justify-center pb-12">
+                <button id="submitBtn" onclick="submitVotes()" disabled class="bg-gray-700 text-gray-400 cursor-not-allowed px-8 py-3 rounded font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center gap-3">
+                    <span>Submit Votes</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </section>
+
+            <!-- Thank You / Success Message (Hidden) -->
+            <div id="successMessage" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div class="bg-ae-panel p-8 rounded-lg border border-ae-accent shadow-2xl max-w-md text-center">
+                    <div class="w-16 h-16 bg-ae-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-check text-2xl text-ae-accent"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">Votes Saved!</h2>
+                    <p class="text-gray-400 mb-6">Thanks for helping shape the workshop.</p>
+                    <button onclick="location.reload()" class="bg-ae-accent text-black font-bold px-6 py-2 rounded hover:bg-white transition-colors">Back</button>
                 </div>
             </div>
 
         </div>
     </main>
-    
-    <footer class="text-center p-8 text-gray-600 text-xs">
-        <p>Built for the Product Design Team</p>
+
+    <!-- Admin Panel (Hidden by default) -->
+    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#121212] overflow-auto">
+        <div class="max-w-6xl mx-auto p-8">
+            <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+                <h1 class="text-2xl font-bold text-white"><span class="text-ae-purple">Admin</span> Dashboard</h1>
+                <button onclick="closeAdmin()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Stats -->
+                <div class="bg-ae-panel p-6 rounded border border-gray-700">
+                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Skill Distribution</h3>
+                    <canvas id="skillChart"></canvas>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="lg:col-span-2 bg-ae-panel p-6 rounded border border-gray-700">
+                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Topic Demand (Weighted Score)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-400">
+                            <thead class="text-xs uppercase bg-ae-dark text-gray-500">
+                                <tr>
+                                    <th class="px-4 py-3">Topic</th>
+                                    <th class="px-4 py-3 text-center">1st</th>
+                                    <th class="px-4 py-3 text-center">2nd</th>
+                                    <th class="px-4 py-3 text-center">3rd</th>
+                                    <th class="px-4 py-3 text-right text-white">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody" class="divide-y divide-gray-800">
+                                <!-- Admin Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-4">* Score = (1st × 3) + (2nd × 2) + (3rd × 1)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-ae-dark border-t border-gray-800 p-6 text-center">
+        <p class="text-gray-600 text-xs">&copy; 2025 Workshop Planner</p>
+        <button onclick="openAdmin()" class="mt-2 text-[10px] text-gray-700 hover:text-ae-purple transition-colors">Admin Access</button>
     </footer>
 
     <!-- Firebase Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
             authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
@@ -314,213 +284,325 @@
             appId: "1:522266658938:web:f4531315cc8e7c8cc413c3"
         };
 
-        // CONSTANTS
-        // Using a fixed app ID for path structure compatibility
-        const APP_ID = 'ae-workshop-tracker';
-        const COLLECTION_NAME = 'workshop_responses';
-
-        // INIT
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
 
-        // STATE
-        let currentUser = null;
-        let selectedSkill = null;
-        let selectedTopics = [];
-        let hasVoted = localStorage.getItem('ae_workshop_voted') === 'true';
+        // Global State
+        let topics = [];
+        let votes = { 1: null, 2: null, 3: null };
+        let skillLevel = null;
+        const userId = localStorage.getItem('ae_voter_id') || 'user_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('ae_voter_id', userId);
 
-        // AUTH & LISTENER
+        // Predefined topics if DB is empty
+        const defaultTopics = [
+            "UI Animation Basics",
+            "Masking & Rotoscoping",
+            "3D Camera & Tracking",
+            "Text Animators",
+            "Lottie / Bodymovin Export",
+            "Expressions for UI",
+            "Graph Editor Mastery",
+            "Green Screen Keying",
+            "Character Rigging (Duik)",
+            "Data Visualization",
+            "Shortcuts & Workflow",
+            "Particle Effects"
+        ];
+
+        // --- Core Logic ---
+
+        // Initialize
         async function init() {
-            try {
-                // Anonymous auth is safer than open rules and ensures stable userId
-                const userCredential = await signInAnonymously(auth);
-                currentUser = userCredential.user;
-                
-                document.getElementById('connection-status').classList.remove('opacity-0');
-
-                // If they already voted locally, show results immediately
-                if(hasVoted) {
-                    showResultsView();
-                }
-
-                // Setup Listener
-                setupRealtimeListener();
-
-            } catch (error) {
-                console.error("Auth Error:", error);
-                document.getElementById('error-msg').innerText = "Connection failed. Try refreshing.";
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
-        }
-
-        function setupRealtimeListener() {
-            // Path: /artifacts/{appId}/public/data/{collectionName}
-            // Note: Since this is a public GitHub page app, we use 'public' segment
-            const q = collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME);
-
+            // Check if user already voted (optional - currently allowing edits or re-vote)
+            // Listen to topics
+            const q = query(collection(db, "topics"), orderBy("title"));
             onSnapshot(q, (snapshot) => {
-                const docs = [];
+                const fetchedTopics = [];
                 snapshot.forEach((doc) => {
-                    docs.push(doc.data());
+                    fetchedTopics.push({ id: doc.id, ...doc.data() });
                 });
-                renderResults(docs);
-            }, (error) => {
-                console.error("Listener Error:", error);
-            });
-        }
-
-        // DOM FUNCTIONS (Exposed to window for onclick)
-        window.selectSkill = (skill) => {
-            selectedSkill = skill;
-            // Visual Update
-            document.querySelectorAll('.skill-btn').forEach(btn => btn.classList.remove('selected', 'border-ae-purple'));
-            const btn = document.getElementById(`skill-${skill}`);
-            btn.classList.add('selected');
-        }
-
-        window.toggleTopic = (el, topic) => {
-            if (selectedTopics.includes(topic)) {
-                selectedTopics = selectedTopics.filter(t => t !== topic);
-                el.classList.remove('selected');
-                el.querySelector('.check-circle').classList.remove('bg-ae-purple', 'border-transparent');
-                el.querySelector('.check-circle i').classList.add('opacity-0');
-            } else {
-                selectedTopics.push(topic);
-                el.classList.add('selected');
-                el.querySelector('.check-circle').classList.add('bg-ae-purple', 'border-transparent');
-                el.querySelector('.check-circle i').classList.remove('opacity-0');
-            }
-        }
-
-        window.submitVote = async () => {
-            const btn = document.getElementById('submit-btn');
-            const errorMsg = document.getElementById('error-msg');
-            const customSuggestion = document.getElementById('custom-suggestion').value;
-
-            // Validation
-            if (!selectedSkill) {
-                errorMsg.innerText = "Please select your skill level first.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-            if (selectedTopics.length === 0 && !customSuggestion) {
-                errorMsg.innerText = "Please pick at least one topic or write a suggestion.";
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-
-            // Loading State
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            errorMsg.classList.add('hidden');
-
-            try {
-                // Following strict path: artifacts/{appId}/public/data/{collection}
-                const colRef = collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME);
                 
-                await addDoc(colRef, {
-                    skillLevel: selectedSkill,
-                    topics: selectedTopics,
-                    suggestion: customSuggestion,
-                    userId: currentUser ? currentUser.uid : 'anon',
-                    timestamp: serverTimestamp()
-                });
-
-                // Success
-                localStorage.setItem('ae_workshop_voted', 'true');
-                showResultsView();
-
-            } catch (error) {
-                console.error("Write Error:", error);
-                errorMsg.innerText = "Error saving vote. Check console.";
-                errorMsg.classList.remove('hidden');
-                btn.disabled = false;
-                btn.innerHTML = 'Try Again';
-            }
-        }
-
-        function showResultsView() {
-            document.getElementById('survey-form').classList.add('hidden');
-            document.getElementById('results-dashboard').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // RENDER LOGIC
-        function renderResults(data) {
-            if (data.length === 0) return;
-
-            document.getElementById('total-voters').innerText = data.length;
-
-            // 1. Process Skills
-            const skillCounts = { Newbie: 0, Dabbler: 0, Pro: 0 };
-            data.forEach(d => {
-                if (skillCounts[d.skillLevel] !== undefined) skillCounts[d.skillLevel]++;
-            });
-
-            const skillBar = document.getElementById('skill-bar-container');
-            const skillLegend = document.getElementById('skill-legend');
-            
-            // Calculate percentages
-            const pNew = (skillCounts.Newbie / data.length) * 100;
-            const pDab = (skillCounts.Dabbler / data.length) * 100;
-            const pPro = (skillCounts.Pro / data.length) * 100;
-
-            skillBar.innerHTML = `
-                <div style="width:${pNew}%" class="h-full bg-blue-500"></div>
-                <div style="width:${pDab}%" class="h-full bg-purple-500"></div>
-                <div style="width:${pPro}%" class="h-full bg-pink-500"></div>
-            `;
-            
-            skillLegend.innerHTML = `
-                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Newbie (${skillCounts.Newbie})</div>
-                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Dabbler (${skillCounts.Dabbler})</div>
-                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-pink-500"></span> Pro (${skillCounts.Pro})</div>
-            `;
-
-            // 2. Process Topics
-            const topicCounts = {};
-            data.forEach(d => {
-                if (d.topics && Array.isArray(d.topics)) {
-                    d.topics.forEach(t => {
-                        topicCounts[t] = (topicCounts[t] || 0) + 1;
-                    });
+                // If empty, seed defaults
+                if (fetchedTopics.length === 0) {
+                    seedDefaults();
+                } else {
+                    topics = fetchedTopics;
+                    renderTopics();
+                }
+                
+                // If admin is open, refresh admin
+                if(!document.getElementById('adminPanel').classList.contains('hidden')){
+                    calculateResults();
                 }
             });
 
-            // Sort topics
-            const sortedTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]);
-            const maxVotes = sortedTopics.length > 0 ? sortedTopics[0][1] : 1;
-
-            const rankingsHTML = sortedTopics.map(([topic, count]) => {
-                const width = (count / data.length) * 100; // Relative to total voters
-                return `
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="font-semibold text-gray-200">${topic}</span>
-                            <span class="text-ae-purple font-mono">${count}</span>
-                        </div>
-                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-ae-accent rounded-full progress-bar" style="width: ${width}%"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            document.getElementById('topic-rankings').innerHTML = rankingsHTML || '<div class="text-gray-500 italic">No topics selected yet.</div>';
-
-            // 3. Process Suggestions
-            const suggestionsHTML = data
-                .filter(d => d.suggestion && d.suggestion.trim().length > 0)
-                .map(d => `
-                    <div class="bg-ae-panel border border-gray-700 p-3 rounded text-sm text-gray-300">
-                        "${d.suggestion}"
-                    </div>
-                `).join('');
-            
-            document.getElementById('suggestions-feed').innerHTML = suggestionsHTML || '<div class="text-gray-500 italic text-sm">No written suggestions yet.</div>';
+            // Check URL for admin
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('admin') === 'true') {
+                openAdmin();
+            }
         }
 
-        // Start
+        async function seedDefaults() {
+            for (const t of defaultTopics) {
+                await addDoc(collection(db, "topics"), {
+                    title: t,
+                    createdAt: serverTimestamp()
+                });
+            }
+        }
+
+        // Render Topics
+        function renderTopics() {
+            const container = document.getElementById('topicsContainer');
+            container.innerHTML = '';
+
+            topics.forEach(topic => {
+                const isSelected = Object.values(votes).some(v => v && v.id === topic.id);
+                
+                const card = document.createElement('div');
+                card.className = `topic-card bg-ae-panel p-3 rounded border ${isSelected ? 'border-gray-600 opacity-50 cursor-default' : 'border-gray-600 hover:border-ae-purple hover:bg-gray-700 cursor-pointer'} h-24 flex items-center justify-center text-center select-none relative group`;
+                
+                card.onclick = () => !isSelected && handleTopicClick(topic);
+
+                card.innerHTML = `
+                    <span class="text-xs md:text-sm font-medium text-gray-200 group-hover:text-white pointer-events-none">${topic.title}</span>
+                    ${isSelected ? '<div class="absolute inset-0 flex items-center justify-center bg-black/40"><i class="fa-solid fa-check text-ae-accent"></i></div>' : ''}
+                `;
+                container.appendChild(card);
+            });
+            
+            updateSubmitButton();
+        }
+
+        // Voting Logic
+        window.handleTopicClick = (topic) => {
+            // Find first empty slot
+            if (!votes[1]) votes[1] = topic;
+            else if (!votes[2]) votes[2] = topic;
+            else if (!votes[3]) votes[3] = topic;
+            else {
+                // All slots full, maybe shake animation or replace last?
+                // Let's replace the last one for UX fluidity, or do nothing.
+                // Let's do nothing but notify.
+                alert("You have 3 votes. Remove one to add another.");
+                return;
+            }
+            updateSlots();
+            renderTopics();
+        };
+
+        window.clearSlot = (slotNum) => {
+            votes[slotNum] = null;
+            // Shift logic? If 1 is deleted, 2 becomes 1? 
+            // Let's keep it simple: just empty the slot.
+            updateSlots();
+            renderTopics();
+        };
+
+        function updateSlots() {
+            for (let i = 1; i <= 3; i++) {
+                const el = document.getElementById(`slot-${i}`);
+                const topic = votes[i];
+                const content = el.querySelector('.slot-content');
+                
+                if (topic) {
+                    content.textContent = topic.title;
+                    content.classList.remove('text-gray-400');
+                    content.classList.add('text-white', 'font-semibold');
+                    el.classList.add('border-ae-purple', 'bg-gray-800');
+                    el.classList.remove('border-gray-600', 'border-dashed');
+                } else {
+                    content.textContent = "Select a topic...";
+                    content.classList.add('text-gray-400');
+                    content.classList.remove('text-white', 'font-semibold');
+                    el.classList.remove('border-ae-purple', 'bg-gray-800');
+                    el.classList.add('border-gray-600', 'border-dashed');
+                }
+            }
+            updateSubmitButton();
+        }
+
+        // Skill Logic
+        window.selectSkill = (level) => {
+            skillLevel = level;
+            document.getElementById('selectedSkill').value = level;
+            
+            // Visual feedback
+            document.querySelectorAll('.skill-btn').forEach(btn => {
+                const ring = btn.querySelector('.check-ring');
+                ring.classList.remove('opacity-100', 'scale-100');
+                ring.classList.add('opacity-0', 'scale-95');
+                btn.classList.remove('bg-gray-800', 'border-ae-accent');
+            });
+
+            const targetBtn = Array.from(document.querySelectorAll('.skill-btn')).find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Comfortable' : 'Pro'));
+            if(targetBtn) {
+                const ring = targetBtn.querySelector('.check-ring');
+                ring.classList.add('opacity-100', 'scale-100');
+                ring.classList.remove('opacity-0', 'scale-95');
+                targetBtn.classList.add('bg-gray-800', 'border-ae-accent');
+            }
+
+            // Smooth scroll to voting
+            document.getElementById('votingSection').scrollIntoView({behavior: 'smooth'});
+            updateSubmitButton();
+        }
+
+        // Add New Topic
+        window.toggleNewTopicForm = () => {
+            document.getElementById('newTopicForm').classList.toggle('hidden');
+        };
+
+        window.submitNewTopic = async () => {
+            const input = document.getElementById('newTopicInput');
+            const title = input.value.trim();
+            if (!title) return;
+
+            try {
+                // Optimistic UI update handled by onSnapshot
+                await addDoc(collection(db, "topics"), {
+                    title: title,
+                    createdAt: serverTimestamp(),
+                    createdBy: userId
+                });
+                input.value = '';
+                toggleNewTopicForm();
+            } catch (e) {
+                console.error("Error adding topic: ", e);
+                alert("Could not add topic. Check console.");
+            }
+        };
+
+        function updateSubmitButton() {
+            const btn = document.getElementById('submitBtn');
+            const hasSkill = !!skillLevel;
+            const hasVotes = votes[1] || votes[2] || votes[3]; // At least one vote? Or all 3? Let's say at least 1.
+            
+            if (hasSkill && hasVotes) {
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
+                btn.classList.add('bg-ae-accent', 'text-black', 'cursor-pointer');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
+                btn.classList.remove('bg-ae-accent', 'text-black', 'cursor-pointer');
+            }
+        }
+
+        // Final Submit
+        window.submitVotes = async () => {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<div class="spinner border-black border-l-transparent"></div>';
+            
+            try {
+                await addDoc(collection(db, "votes"), {
+                    userId: userId,
+                    skillLevel: skillLevel,
+                    vote1: votes[1] ? votes[1].id : null,
+                    vote2: votes[2] ? votes[2].id : null,
+                    vote3: votes[3] ? votes[3].id : null,
+                    submittedAt: serverTimestamp()
+                });
+                
+                document.getElementById('successMessage').classList.remove('hidden');
+            } catch (e) {
+                console.error("Error submitting votes: ", e);
+                alert("Error submitting. Please try again.");
+                btn.innerHTML = '<span>Submit Votes</span><i class="fa-solid fa-paper-plane"></i>';
+            }
+        };
+
+
+        // --- Admin Logic ---
+        
+        window.openAdmin = () => {
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            calculateResults();
+        };
+        
+        window.closeAdmin = () => {
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
+
+        async function calculateResults() {
+            // Fetch all votes
+            const votesSnap = await getDocs(collection(db, "votes"));
+            const allVotes = [];
+            votesSnap.forEach(doc => allVotes.push(doc.data()));
+
+            // 1. Calculate Topic Scores
+            const scores = {}; // { topicId: { score: 0, 1st: 0, 2nd: 0, 3rd: 0, title: '' } }
+            
+            // Map IDs to titles from local topics array
+            const topicMap = {};
+            topics.forEach(t => topicMap[t.id] = t.title);
+
+            allVotes.forEach(v => {
+                const processVote = (topicId, weight, slotName) => {
+                    if(!topicId) return;
+                    if(!scores[topicId]) scores[topicId] = { score: 0, first: 0, second: 0, third: 0, title: topicMap[topicId] || 'Unknown' };
+                    scores[topicId].score += weight;
+                    scores[topicId][slotName]++;
+                };
+
+                processVote(v.vote1, 3, 'first');
+                processVote(v.vote2, 2, 'second');
+                processVote(v.vote3, 1, 'third');
+            });
+
+            // Convert to array and sort
+            const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
+
+            // Render Table
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = sortedTopics.map(t => `
+                <tr class="hover:bg-gray-800">
+                    <td class="px-4 py-3 font-medium text-white">${t.title}</td>
+                    <td class="px-4 py-3 text-center text-yellow-500 font-bold">${t.first}</td>
+                    <td class="px-4 py-3 text-center text-gray-400">${t.second}</td>
+                    <td class="px-4 py-3 text-center text-yellow-800">${t.third}</td>
+                    <td class="px-4 py-3 text-right text-ae-accent font-bold text-lg">${t.score}</td>
+                </tr>
+            `).join('');
+
+            // 2. Calculate Skills
+            const skills = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
+            allVotes.forEach(v => {
+                if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
+            });
+
+            renderChart(skills);
+        }
+
+        let chartInstance = null;
+        function renderChart(data) {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Newcomer', 'Comfortable', 'Pro'],
+                    datasets: [{
+                        data: [data.Beginner, data.Intermediate, data.Advanced],
+                        backgroundColor: ['#4ade80', '#9999FF', '#f43f5e'],
+                        borderColor: '#232323',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        }
+
         init();
 
     </script>
