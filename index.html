@@ -18,19 +18,22 @@
                 extend: {
                     colors: {
                         bg: { main: '#050505', card: '#0f0f10', glass: 'rgba(20, 20, 23, 0.7)' },
-                        brand: { primary: '#6d28d9', secondary: '#00d8a5', glow: '#8b5cf6' }
-                    },
-                    backgroundImage: {
-                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        brand: { primary: '#6d28d9', secondary: '#00d8a5' },
+                        rank: {
+                            gold: '#FFD700',
+                            silver: '#C0C0C0',
+                            bronze: '#CD7F32'
+                        }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'pulse-glow': 'pulseGlow 2s infinite',
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
-                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+                        pulseGlow: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.6 } }
                     }
                 }
             }
@@ -60,24 +63,27 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* Card Selection State */
+        /* Card Selection State - Pop Effect */
         .card-selected {
-            border-color: #6d28d9 !important;
-            background: rgba(109, 40, 217, 0.1) !important;
-            box-shadow: 0 0 30px rgba(109, 40, 217, 0.15);
+            background: rgba(255, 255, 255, 0.08) !important;
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
         
-        /* Rank Badge */
-        .rank-number {
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        /* Dashed Add Button */
+        .add-card {
+            border: 1px dashed rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.02);
+        }
+        .add-card:hover {
+            border-color: #00d8a5;
+            background: rgba(0, 216, 165, 0.05);
         }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050505; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* Loader */
         .loader {
@@ -132,8 +138,8 @@
                     <div class="absolute top-4 right-4 w-4 h-4 rounded-full border border-gray-600 group-hover:border-brand-primary transition-colors check-circle"></div>
                     <div class="h-full flex flex-col justify-end">
                         <i class="fa-solid fa-layer-group text-2xl text-gray-600 mb-3 group-hover:text-brand-primary transition-colors"></i>
-                        <span class="block text-white font-semibold">Comfortable</span>
-                        <span class="text-xs text-gray-500">Knows layers & keyframes.</span>
+                        <span class="block text-white font-semibold">Novice</span>
+                        <span class="text-xs text-gray-500">I know the basics, but I'm still learning.</span>
                     </div>
                 </button>
 
@@ -155,14 +161,14 @@
                     <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white">2</span>
                     <h3 class="text-sm font-medium text-gray-400 uppercase tracking-widest">Select Priorities</h3>
                 </div>
-                <button onclick="toggleNewTopic()" class="text-xs text-brand-primary hover:text-white transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Suggest Topic
-                </button>
+                <div class="text-[10px] text-gray-500">Click to rank (#1 is highest priority)</div>
             </div>
 
-            <div id="newTopicForm" class="hidden animate-fade-in mb-4 p-1 rounded-lg bg-white/5 border border-white/10 flex">
-                <input type="text" id="newTopicInput" placeholder="Topic name (e.g. 3D Tracking)" class="bg-transparent border-none text-sm text-white px-4 py-2 w-full focus:outline-none placeholder-gray-600">
-                <button onclick="submitNewTopic()" class="bg-white/10 hover:bg-brand-primary text-white px-4 rounded-md text-xs font-bold transition-colors">Add</button>
+            <div id="newTopicForm" class="hidden animate-fade-in mb-4 p-4 rounded-lg bg-brand-secondary/10 border border-brand-secondary/30 flex items-center gap-3">
+                <i class="fa-solid fa-lightbulb text-brand-secondary"></i>
+                <input type="text" id="newTopicInput" placeholder="What topic is missing? (e.g. 3D Tracking)" class="bg-transparent border-none text-sm text-white px-2 py-1 w-full focus:outline-none placeholder-gray-500">
+                <button onclick="submitNewTopic()" class="bg-brand-secondary text-black px-4 py-1.5 rounded-md text-xs font-bold hover:bg-white transition-colors">Add</button>
+                <button onclick="toggleNewTopic()" class="text-gray-500 hover:text-white px-2"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -313,31 +319,45 @@
             const container = document.getElementById('topicsContainer');
             container.innerHTML = '';
 
+            // 1. ADD THE PROMINENT "SUGGEST" CARD FIRST
+            const addCard = document.createElement('div');
+            addCard.className = `add-card h-20 rounded-lg cursor-pointer flex items-center justify-center gap-2 group transition-all duration-200`;
+            addCard.onclick = toggleNewTopic;
+            addCard.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-brand-secondary/20 text-brand-secondary flex items-center justify-center border border-brand-secondary/50 group-hover:bg-brand-secondary group-hover:text-black transition-colors">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 group-hover:text-white uppercase tracking-wider">Suggest Topic</span>
+            `;
+            container.appendChild(addCard);
+
+            // 2. Render Actual Topics
             topics.forEach(topic => {
                 const rankIndex = selectedTopicIds.indexOf(topic.id);
                 const isSelected = rankIndex !== -1;
                 const rank = rankIndex + 1;
                 
-                // Color Logic based on rank
-                let ringColor = 'border-white/10';
-                let textColor = 'text-gray-400';
+                // Color Code Logic
+                let badgeClass = 'bg-brand-primary text-white';
+                let borderClass = isSelected ? 'border-brand-primary' : 'border-white/5';
+                
                 if(isSelected) {
-                    ringColor = 'border-brand-primary';
-                    textColor = 'text-white';
+                    if(rank === 1) { badgeClass = 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/50'; borderClass = 'border-yellow-400/50'; }
+                    else if(rank === 2) { badgeClass = 'bg-slate-300 text-black shadow-lg shadow-slate-300/50'; borderClass = 'border-slate-300/50'; }
+                    else if(rank === 3) { badgeClass = 'bg-orange-400 text-black shadow-lg shadow-orange-500/50'; borderClass = 'border-orange-400/50'; }
                 }
 
                 const card = document.createElement('div');
-                // Glass Card styling
-                card.className = `group relative h-20 rounded-lg border ${isSelected ? 'card-selected' : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'} cursor-pointer transition-all duration-200 select-none flex items-center px-4`;
+                card.className = `group relative h-20 rounded-lg border ${isSelected ? 'card-selected' : 'bg-white/5 hover:border-white/20 hover:bg-white/10'} cursor-pointer transition-all duration-200 select-none flex items-center px-4 ${borderClass}`;
                 
                 card.onclick = () => toggleTopic(topic.id);
 
                 card.innerHTML = `
-                    <div class="flex-grow">
-                        <span class="text-sm font-medium ${textColor} transition-colors">${topic.title}</span>
+                    <div class="flex-grow pr-2">
+                        <span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'} transition-colors">${topic.title}</span>
                     </div>
                     ${isSelected ? `
-                        <div class="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs font-bold shadow-lg rank-number animate-fade-in">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${badgeClass} rank-number animate-fade-in transform scale-110">
                             ${rank}
                         </div>
                     ` : `
@@ -356,15 +376,17 @@
             
             // Visual feedback
             document.querySelectorAll('.skill-btn').forEach(btn => {
-                btn.classList.remove('card-selected');
+                btn.classList.remove('card-selected', 'border-brand-primary', 'bg-white/5');
+                btn.classList.add('glass-panel');
                 btn.querySelector('.check-circle').classList.remove('bg-white', 'border-transparent');
             });
 
             const targetBtn = Array.from(document.querySelectorAll('.skill-btn'))
-                .find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Comfortable' : 'Pro'));
+                .find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Novice' : 'Pro'));
             
             if(targetBtn) {
                 targetBtn.classList.add('card-selected');
+                targetBtn.classList.remove('glass-panel');
                 const circle = targetBtn.querySelector('.check-circle');
                 circle.classList.add('bg-white', 'border-transparent');
             }
@@ -392,7 +414,15 @@
         }
 
         // --- Data Handling ---
-        window.toggleNewTopic = () => document.getElementById('newTopicForm').classList.toggle('hidden');
+        window.toggleNewTopic = () => {
+             const form = document.getElementById('newTopicForm');
+             if(form.classList.contains('hidden')) {
+                 form.classList.remove('hidden');
+                 document.getElementById('newTopicInput').focus();
+             } else {
+                 form.classList.add('hidden');
+             }
+        };
         
         window.submitNewTopic = async () => {
             const input = document.getElementById('newTopicInput');
@@ -512,7 +542,7 @@
             window.myChart = new Chart(document.getElementById('skillChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['New', 'Mid', 'Pro'],
+                    labels: ['New', 'Novice', 'Pro'],
                     datasets: [{
                         data: [skills.Beginner, skills.Intermediate, skills.Advanced],
                         backgroundColor: ['#4ade80', '#8b5cf6', '#f43f5e'],
