@@ -19,21 +19,15 @@
                     colors: {
                         bg: { main: '#050505', card: '#0f0f10', glass: 'rgba(20, 20, 23, 0.7)' },
                         brand: { primary: '#6d28d9', secondary: '#00d8a5' },
-                        rank: {
-                            gold: '#FFD700',
-                            silver: '#C0C0C0',
-                            bronze: '#CD7F32'
-                        }
+                        rank: { gold: '#FFD700', silver: '#C0C0C0', bronze: '#CD7F32' }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-glow': 'pulseGlow 2s infinite',
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
-                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-                        pulseGlow: { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.6 } }
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -44,41 +38,20 @@
         body { background-color: #050505; color: #ffffff; }
         
         /* Subtle Background Glows */
-        .ambient-glow {
-            position: fixed; width: 600px; height: 600px; border-radius: 50%;
-            filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none;
-        }
+        .ambient-glow { position: fixed; width: 600px; height: 600px; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none; }
         .glow-1 { top: -100px; left: -100px; background: #6d28d9; }
         .glow-2 { bottom: -100px; right: -100px; background: #00d8a5; }
 
-        /* Glassmorphism Utilities */
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glass-panel {
-            background: #0f0f10;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+        /* Glassmorphism */
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-panel { background: #0f0f10; border: 1px solid rgba(255, 255, 255, 0.08); }
 
-        /* Card Selection State - Pop Effect */
-        .card-selected {
-            background: rgba(255, 255, 255, 0.08) !important;
-            transform: scale(1.02);
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-        }
+        /* Card Selection */
+        .card-selected { background: rgba(255, 255, 255, 0.08) !important; transform: scale(1.02); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
         
         /* Dashed Add Button */
-        .add-card {
-            border: 1px dashed rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.02);
-        }
-        .add-card:hover {
-            border-color: #00d8a5;
-            background: rgba(0, 216, 165, 0.05);
-        }
+        .add-card { border: 1px dashed rgba(255,255,255,0.3); background: rgba(255,255,255,0.02); }
+        .add-card:hover { border-color: #00d8a5; background: rgba(0, 216, 165, 0.05); }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -86,11 +59,7 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
         /* Loader */
-        .loader {
-            width: 20px; height: 20px; border: 2px solid #333;
-            border-bottom-color: #fff; border-radius: 50%;
-            display: inline-block; animation: rotation 1s linear infinite;
-        }
+        .loader { width: 20px; height: 20px; border: 2px solid #333; border-bottom-color: #fff; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -102,9 +71,7 @@
     <header class="fixed top-0 w-full z-40 glass border-b-0 border-white/5">
         <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-900 to-black border border-white/10 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <span class="text-indigo-400 font-bold text-xs tracking-wider">Ae</span>
-                </div>
+                <img src="AE.svg" alt="AE" class="w-10 h-10 object-contain drop-shadow-[0_0_15px_rgba(109,40,217,0.4)]">
                 <h1 class="font-medium text-sm text-gray-300 tracking-tight">Workshop <span class="text-gray-600">Planner</span></h1>
             </div>
             <div id="userInfo" class="text-[10px] text-gray-600 font-mono"></div>
@@ -112,7 +79,6 @@
     </header>
 
     <main class="flex-grow max-w-4xl mx-auto w-full px-6 pt-24 space-y-16">
-
         <div class="text-center space-y-2 animate-fade-in">
             <h2 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500 tracking-tight">Curriculum Voting</h2>
             <p class="text-gray-500 text-sm max-w-md mx-auto">Help shape the upcoming After Effects workshop. Select your skill level and vote for the topics that matter most to you.</p>
@@ -172,13 +138,8 @@
             </div>
 
             <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div class="col-span-full py-12 text-center text-gray-600">
-                    <div class="loader mb-2"></div>
-                    <p class="text-xs">Loading curriculum...</p>
                 </div>
-            </div>
         </section>
-
     </main>
 
     <div id="stickyFooter" class="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none transform translate-y-32 transition-transform duration-500">
@@ -187,10 +148,8 @@
                 <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Your Picks</span>
                 <span class="text-sm font-medium text-white"><span id="selectionCount" class="text-brand-primary">0</span> Selected</span>
             </div>
-            
             <button onclick="submitVotes()" id="submitBtn" class="bg-white text-black hover:bg-gray-200 px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2">
-                <span>Submit</span>
-                <i class="fa-solid fa-arrow-right text-xs"></i>
+                <span>Submit</span><i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
         </div>
     </div>
@@ -198,56 +157,89 @@
     <div id="successMessage" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
         <div class="bg-[#0f0f10] border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
-            <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
-                <i class="fa-solid fa-check"></i>
-            </div>
+            <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30"><i class="fa-solid fa-check"></i></div>
             <h3 class="text-xl font-bold text-white mb-2">Votes Recorded</h3>
-            <p class="text-gray-400 text-sm mb-6">Thanks for your input. The workshop curriculum will be tailored to these results.</p>
+            <p class="text-gray-400 text-sm mb-6">Thanks for your input.</p>
             <button onclick="location.reload()" class="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-lg text-sm font-medium transition-colors border border-white/5">Close</button>
         </div>
     </div>
 
-    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#050505] overflow-y-auto">
-        <div class="max-w-6xl mx-auto p-6 md:p-12">
-            <div class="flex justify-between items-center mb-12">
-                <div>
-                    <h1 class="text-2xl font-bold text-white">Admin Dashboard</h1>
-                    <p class="text-gray-500 text-sm">Results & Content Management</p>
+    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl overflow-y-auto">
+        <div class="max-w-7xl mx-auto p-4 md:p-8">
+            <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-6">
+                <div class="flex items-center gap-4">
+                    <img src="AE.svg" class="w-8 h-8 opacity-50">
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-tight">Command Center</h1>
+                        <p class="text-xs text-gray-500">Live Workshop Statistics</p>
+                    </div>
                 </div>
-                <button onclick="closeAdmin()" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="closeAdmin()" class="bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white px-4 py-2 rounded-lg text-xs font-medium transition-colors border border-gray-800">
+                    Exit Dashboard
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-xl">
-                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Audience Level</h3>
-                    <div class="h-48 relative">
-                        <canvas id="skillChart"></canvas>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gray-900/50 border border-gray-800 p-4 rounded-xl">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Total Votes</p>
+                    <h2 class="text-2xl font-bold text-white" id="adminTotalVotes">0</h2>
+                </div>
+                <div class="bg-gray-900/50 border border-gray-800 p-4 rounded-xl">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Top Request</p>
+                    <h2 class="text-2xl font-bold text-brand-secondary truncate" id="adminTopTopic">-</h2>
+                </div>
+                <div class="bg-gray-900/50 border border-gray-800 p-4 rounded-xl">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Status</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-sm font-medium text-gray-300">Live Collecting</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="lg:col-span-2 glass-panel p-6 rounded-xl">
-                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Topic Ranking (Weighted)</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="text-xs text-gray-500 border-b border-white/5">
-                                <tr>
-                                    <th class="pb-3 font-normal">Topic</th>
-                                    <th class="pb-3 text-right font-normal">Score</th>
-                                    <th class="pb-3 pl-4 w-1/3 font-normal">Interest</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminTableBody" class="divide-y divide-white/5 text-gray-300">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-3 glass-panel p-6 rounded-xl mt-6">
-                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Content Management</h3>
-                    <div id="adminTopicsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <div class="lg:col-span-8 space-y-6">
+                    <div class="bg-[#0A0A0A] border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+                        <div class="p-4 border-b border-gray-800 bg-gray-900/30 flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-gray-300">Topic Leaderboard</h3>
+                            <span class="text-[10px] text-gray-500">Weighted Score (1st=3pts)</span>
                         </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-gray-500 bg-gray-900/50 uppercase">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium w-16">Rank</th>
+                                        <th class="px-6 py-3 font-medium">Topic Name</th>
+                                        <th class="px-6 py-3 font-medium text-right">Score</th>
+                                        <th class="px-6 py-3 font-medium w-32">Interest</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTableBody" class="divide-y divide-gray-800/50 text-gray-300">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 space-y-8">
+                    
+                    <div class="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Participant Mix</h3>
+                        <div class="h-48 relative">
+                            <canvas id="skillChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Curriculum Control</h3>
+                        <div id="adminTopicsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            </div>
+                        <div class="mt-4 pt-4 border-t border-gray-800 text-[10px] text-gray-600 text-center">
+                            Order determines display on voting page.
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -261,7 +253,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
             authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
@@ -274,7 +265,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // State
         let topics = [];
         let selectedTopicIds = [];
         let skillLevel = null;
@@ -288,7 +278,6 @@
             "Data Visualization", "Shortcuts & Workflow", "Particle Effects"
         ];
 
-        // --- Initialization ---
         async function init() {
             const q = collection(db, "topics");
             onSnapshot(q, (snapshot) => {
@@ -319,7 +308,7 @@
             const container = document.getElementById('topicsContainer');
             container.innerHTML = '';
 
-            // 1. ADD THE PROMINENT "SUGGEST" CARD FIRST
+            // Suggest Card
             const addCard = document.createElement('div');
             addCard.className = `add-card h-20 rounded-lg cursor-pointer flex items-center justify-center gap-2 group transition-all duration-200`;
             addCard.onclick = toggleNewTopic;
@@ -331,13 +320,11 @@
             `;
             container.appendChild(addCard);
 
-            // 2. Render Actual Topics
             topics.forEach(topic => {
                 const rankIndex = selectedTopicIds.indexOf(topic.id);
                 const isSelected = rankIndex !== -1;
                 const rank = rankIndex + 1;
                 
-                // Color Code Logic
                 let badgeClass = 'bg-brand-primary text-white';
                 let borderClass = isSelected ? 'border-brand-primary' : 'border-white/5';
                 
@@ -353,13 +340,9 @@
                 card.onclick = () => toggleTopic(topic.id);
 
                 card.innerHTML = `
-                    <div class="flex-grow pr-2">
-                        <span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'} transition-colors">${topic.title}</span>
-                    </div>
+                    <div class="flex-grow pr-2"><span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'} transition-colors">${topic.title}</span></div>
                     ${isSelected ? `
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${badgeClass} rank-number animate-fade-in transform scale-110">
-                            ${rank}
-                        </div>
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${badgeClass} rank-number animate-fade-in transform scale-110">${rank}</div>
                     ` : `
                         <div class="w-4 h-4 rounded-full border border-gray-600 opacity-20 group-hover:opacity-100 transition-opacity"></div>
                     `}
@@ -374,7 +357,6 @@
             skillLevel = level;
             document.getElementById('selectedSkill').value = level;
             
-            // Visual feedback
             document.querySelectorAll('.skill-btn').forEach(btn => {
                 btn.classList.remove('card-selected', 'border-brand-primary', 'bg-white/5');
                 btn.classList.add('glass-panel');
@@ -387,41 +369,29 @@
             if(targetBtn) {
                 targetBtn.classList.add('card-selected');
                 targetBtn.classList.remove('glass-panel');
-                const circle = targetBtn.querySelector('.check-circle');
-                circle.classList.add('bg-white', 'border-transparent');
+                targetBtn.querySelector('.check-circle').classList.add('bg-white', 'border-transparent');
             }
-
-            // Reveal Grid
-            const section = document.getElementById('topicSection');
-            section.classList.remove('opacity-30', 'pointer-events-none', 'blur-sm');
-            section.scrollIntoView({behavior: 'smooth', block: 'center'});
+            document.getElementById('topicSection').classList.remove('opacity-30', 'pointer-events-none', 'blur-sm');
+            document.getElementById('topicSection').scrollIntoView({behavior: 'smooth', block: 'center'});
         };
 
         window.toggleTopic = (id) => {
             const index = selectedTopicIds.indexOf(id);
-            if(index !== -1) selectedTopicIds.splice(index, 1); // Remove
-            else selectedTopicIds.push(id); // Add
+            if(index !== -1) selectedTopicIds.splice(index, 1);
+            else selectedTopicIds.push(id);
             renderTopics();
         };
 
         function updateFooter() {
             const count = selectedTopicIds.length;
             document.getElementById('selectionCount').textContent = count;
-            const footer = document.getElementById('stickyFooter');
-            
-            // Logic: Show footer if skill selected OR items picked
-            if(skillLevel || count > 0) footer.classList.remove('translate-y-32');
+            if(skillLevel || count > 0) document.getElementById('stickyFooter').classList.remove('translate-y-32');
         }
 
-        // --- Data Handling ---
         window.toggleNewTopic = () => {
              const form = document.getElementById('newTopicForm');
-             if(form.classList.contains('hidden')) {
-                 form.classList.remove('hidden');
-                 document.getElementById('newTopicInput').focus();
-             } else {
-                 form.classList.add('hidden');
-             }
+             form.classList.toggle('hidden');
+             if(!form.classList.contains('hidden')) document.getElementById('newTopicInput').focus();
         };
         
         window.submitNewTopic = async () => {
@@ -437,22 +407,14 @@
         window.submitVotes = async () => {
             if (!skillLevel) { alert("Please select your experience level first."); window.scrollTo({top:0, behavior:'smooth'}); return; }
             if (selectedTopicIds.length === 0) { alert("Please select at least one topic."); return; }
-
             const btn = document.getElementById('submitBtn');
             const originalContent = btn.innerHTML;
             btn.innerHTML = '<div class="loader w-4 h-4 border-gray-600 border-b-black"></div>';
-            
             try {
-                await addDoc(collection(db, "votes"), {
-                    userId, skillLevel, selectedTopics: selectedTopicIds, submittedAt: serverTimestamp()
-                });
+                await addDoc(collection(db, "votes"), { userId, skillLevel, selectedTopics: selectedTopicIds, submittedAt: serverTimestamp() });
                 document.getElementById('successMessage').classList.remove('hidden');
                 document.getElementById('stickyFooter').classList.add('translate-y-32');
-            } catch (e) {
-                console.error(e);
-                alert("Error submitting.");
-                btn.innerHTML = originalContent;
-            }
+            } catch (e) { console.error(e); alert("Error submitting."); btn.innerHTML = originalContent; }
         };
 
         // --- Admin Functions ---
@@ -472,19 +434,18 @@
             const list = document.getElementById('adminTopicsList');
             if(!list) return;
             list.innerHTML = topics.map((t, idx) => `
-                <div class="flex items-center gap-2 bg-white/5 p-2 rounded border border-white/10 group">
-                    <div class="flex flex-col">
-                        <button onclick="moveTopic(${idx},-1)" class="text-[10px] text-gray-500 hover:text-white ${idx===0?'invisible':''}"><i class="fa-solid fa-chevron-up"></i></button>
-                        <button onclick="moveTopic(${idx},1)" class="text-[10px] text-gray-500 hover:text-white ${idx===topics.length-1?'invisible':''}"><i class="fa-solid fa-chevron-down"></i></button>
+                <div class="flex items-center gap-2 bg-gray-900 p-2 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors group">
+                    <div class="flex flex-col space-y-1">
+                        <button onclick="moveTopic(${idx},-1)" class="w-4 h-4 flex items-center justify-center bg-gray-800 rounded text-[8px] text-gray-500 hover:text-white ${idx===0?'invisible':''}"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="moveTopic(${idx},1)" class="w-4 h-4 flex items-center justify-center bg-gray-800 rounded text-[8px] text-gray-500 hover:text-white ${idx===topics.length-1?'invisible':''}"><i class="fa-solid fa-chevron-down"></i></button>
                     </div>
-                    <input id="edit-${t.id}" value="${t.title}" class="bg-transparent text-xs text-gray-300 w-full focus:outline-none">
-                    <button onclick="updateTopicName('${t.id}')" class="text-gray-500 hover:text-brand-primary p-2"><i class="fa-solid fa-floppy-disk"></i></button>
-                    <button onclick="deleteTopic('${t.id}')" class="text-gray-500 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                    <input id="edit-${t.id}" value="${t.title}" class="bg-transparent text-xs font-medium text-gray-300 w-full focus:outline-none px-2">
+                    <button onclick="updateTopicName('${t.id}')" class="text-gray-600 hover:text-brand-primary p-2 opacity-50 group-hover:opacity-100 transition-opacity" title="Save"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button onclick="deleteTopic('${t.id}')" class="text-gray-600 hover:text-red-500 p-2 opacity-50 group-hover:opacity-100 transition-opacity" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
-        // Attach global helpers for module scope
         window.moveTopic = async (idx, dir) => {
             const t1 = topics[idx], t2 = topics[idx+dir];
             await updateDoc(doc(db, "topics", t1.id), { order: t2.order ?? idx+dir });
@@ -501,43 +462,52 @@
             const scores = {};
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
-
             const skills = { Beginner:0, Intermediate:0, Advanced:0 };
+            let totalVotes = 0;
 
             snap.forEach(doc => {
                 const v = doc.data();
+                totalVotes++;
                 if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
                 
-                // Scoring
                 if(v.selectedTopics && Array.isArray(v.selectedTopics)) {
                     v.selectedTopics.forEach((tid, idx) => {
                         if(!scores[tid]) scores[tid] = { score:0, title: topicMap[tid] || 'Unknown' };
-                        // Weighting: 1st=3pts, 2nd=2pts, Rest=1pt
                         scores[tid].score += (idx === 0 ? 3 : idx === 1 ? 2 : 1);
                     });
-                } else if (v.vote1) { // Legacy support
+                } else if (v.vote1) { 
                     if(v.vote1) { if(!scores[v.vote1]) scores[v.vote1]={score:0,title:topicMap[v.vote1]}; scores[v.vote1].score+=3; }
                     if(v.vote2) { if(!scores[v.vote2]) scores[v.vote2]={score:0,title:topicMap[v.vote2]}; scores[v.vote2].score+=2; }
                     if(v.vote3) { if(!scores[v.vote3]) scores[v.vote3]={score:0,title:topicMap[v.vote3]}; scores[v.vote3].score+=1; }
                 }
             });
 
-            // Table
             const sorted = Object.values(scores).sort((a,b) => b.score - a.score);
             const max = sorted[0]?.score || 1;
-            document.getElementById('adminTableBody').innerHTML = sorted.map(t => `
-                <tr class="hover:bg-white/5 transition-colors">
-                    <td class="py-2 pr-4 text-xs font-medium">${t.title}</td>
-                    <td class="py-2 pr-4 text-right text-brand-primary font-bold">${t.score}</td>
-                    <td class="py-2 pl-4">
-                        <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-brand-primary" style="width:${(t.score/max)*100}%"></div>
+            
+            // Update KPIs
+            document.getElementById('adminTotalVotes').innerText = totalVotes;
+            document.getElementById('adminTopTopic').innerText = sorted.length > 0 ? sorted[0].title : '-';
+
+            document.getElementById('adminTableBody').innerHTML = sorted.map((t, index) => {
+                let badge = `<span class="text-gray-500 font-mono">#${index+1}</span>`;
+                if(index===0) badge = `<span class="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold border border-yellow-500/30">#1</span>`;
+                if(index===1) badge = `<span class="bg-gray-400/20 text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold border border-gray-400/30">#2</span>`;
+                if(index===2) badge = `<span class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-[10px] font-bold border border-orange-500/30">#3</span>`;
+
+                return `
+                <tr class="hover:bg-white/5 transition-colors border-b border-gray-800/50 last:border-0">
+                    <td class="px-6 py-4">${badge}</td>
+                    <td class="px-6 py-4 font-medium text-white">${t.title}</td>
+                    <td class="px-6 py-4 text-right font-mono text-brand-secondary">${t.score}</td>
+                    <td class="px-6 py-4">
+                        <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden w-full">
+                            <div class="h-full bg-brand-secondary" style="width:${(t.score/max)*100}%"></div>
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
 
-            // Chart
             if(window.myChart) window.myChart.destroy();
             window.myChart = new Chart(document.getElementById('skillChart'), {
                 type: 'doughnut',
@@ -546,8 +516,8 @@
                     datasets: [{
                         data: [skills.Beginner, skills.Intermediate, skills.Advanced],
                         backgroundColor: ['#4ade80', '#8b5cf6', '#f43f5e'],
-                        borderColor: '#0f0f10',
-                        borderWidth: 4
+                        borderColor: '#0A0A0A',
+                        borderWidth: 2
                     }]
                 },
                 options: { 
