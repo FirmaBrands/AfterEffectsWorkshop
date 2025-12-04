@@ -265,7 +265,7 @@
                 <!-- Manage Topics Section -->
                 <div class="col-span-1 lg:col-span-3 bg-ae-panel p-6 rounded border border-gray-700 mt-2">
                     <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Manage Topics</h3>
-                    <p class="text-xs text-gray-500 mb-4">Rename topics or remove duplicates. Edits update immediately.</p>
+                    <p class="text-xs text-gray-500 mb-4">Reorder, rename or remove topics. Order reflects on the main page.</p>
                     <div id="adminTopicsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- JS injected admin tools -->
                     </div>
@@ -323,9 +323,10 @@
 
         // Initialize
         async function init() {
-            // Check if user already voted (optional - currently allowing edits or re-vote)
-            // Listen to topics
-            const q = query(collection(db, "topics"), orderBy("title"));
+            // Fetch topics without automatic sorting to handle custom orders manually in JS
+            // This is robust against missing 'order' fields
+            const q = collection(db, "topics");
+            
             onSnapshot(q, (snapshot) => {
                 const fetchedTopics = [];
                 snapshot.forEach((doc) => {
@@ -336,7 +337,15 @@
                 if (fetchedTopics.length === 0) {
                     seedDefaults();
                 } else {
-                    topics = fetchedTopics;
+                    // Sort in memory: Order ASC, then Title ASC
+                    // Treat missing order as very large number (bottom)
+                    topics = fetchedTopics.sort((a, b) => {
+                        const orderA = typeof a.order === 'number' ? a.order : 9999;
+                        const orderB = typeof b.order === 'number' ? b.order : 9999;
+                        if (orderA !== orderB) return orderA - orderB;
+                        return a.title.localeCompare(b.title);
+                    });
+                    
                     renderTopics();
                     renderManageTopics(); // Update admin view if open
                 }
@@ -355,9 +364,12 @@
         }
 
         async function seedDefaults() {
+            // Seed with index as order
+            let i = 0;
             for (const t of defaultTopics) {
                 await addDoc(collection(db, "topics"), {
                     title: t,
+                    order: i++,
                     createdAt: serverTimestamp()
                 });
             }
@@ -393,9 +405,6 @@
             else if (!votes[2]) votes[2] = topic;
             else if (!votes[3]) votes[3] = topic;
             else {
-                // All slots full, maybe shake animation or replace last?
-                // Let's replace the last one for UX fluidity, or do nothing.
-                // Let's do nothing but notify.
                 alert("You have 3 votes. Remove one to add another.");
                 return;
             }
@@ -405,8 +414,6 @@
 
         window.clearSlot = (slotNum) => {
             votes[slotNum] = null;
-            // Shift logic? If 1 is deleted, 2 becomes 1? 
-            // Let's keep it simple: just empty the slot.
             updateSlots();
             renderTopics();
         };
@@ -455,7 +462,6 @@
                 targetBtn.classList.add('bg-gray-800', 'border-ae-accent');
             }
 
-            // Smooth scroll to voting
             document.getElementById('votingSection').scrollIntoView({behavior: 'smooth'});
             updateSubmitButton();
         }
@@ -471,9 +477,12 @@
             if (!title) return;
 
             try {
-                // Optimistic UI update handled by onSnapshot
+                // Determine new order = max order + 1
+                const maxOrder = topics.reduce((max, t) => Math.max(max, typeof t.order === 'number' ? t.order : -1), -1);
+
                 await addDoc(collection(db, "topics"), {
                     title: title,
+                    order: maxOrder + 1,
                     createdAt: serverTimestamp(),
                     createdBy: userId
                 });
@@ -488,7 +497,7 @@
         function updateSubmitButton() {
             const btn = document.getElementById('submitBtn');
             const hasSkill = !!skillLevel;
-            const hasVotes = votes[1] || votes[2] || votes[3]; // At least one vote? Or all 3? Let's say at least 1.
+            const hasVotes = votes[1] || votes[2] || votes[3]; 
             
             if (hasSkill && hasVotes) {
                 btn.disabled = false;
@@ -528,6 +537,12 @@
         // --- Admin Logic ---
         
         window.openAdmin = () => {
+            const pwd = prompt("Enter Admin Password:");
+            if (pwd !== "123") {
+                alert("Incorrect password.");
+                return;
+            }
+
             document.getElementById('adminPanel').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             calculateResults();
@@ -543,8 +558,14 @@
             const list = document.getElementById('adminTopicsList');
             if(!list) return;
 
-            list.innerHTML = topics.map(t => `
+            // Use the globally sorted 'topics' array
+            list.innerHTML = topics.map((t, index) => `
                 <div class="bg-gray-800 p-2 pl-3 rounded flex items-center gap-2 group border border-gray-700 hover:border-gray-500 transition-colors">
+                    <div class="flex flex-col gap-0.5 mr-1">
+                        <button onclick="moveTopic(${index}, -1)" class="text-gray-500 hover:text-white text-[10px] ${index === 0 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="moveTopic(${index}, 1)" class="text-gray-500 hover:text-white text-[10px] ${index === topics.length - 1 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                    
                     <input type="text" value="${t.title}" id="edit-input-${t.id}" 
                         class="bg-transparent border-none focus:outline-none focus:text-ae-purple text-gray-300 flex-grow text-xs font-medium" 
                         placeholder="Topic Name">
@@ -562,13 +583,33 @@
             `).join('');
         }
 
+        window.moveTopic = async (index, direction) => {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= topics.length) return;
+
+            const topicA = topics[index];
+            const topicB = topics[targetIndex];
+
+            // Normalize orders if missing
+            const orderA = typeof topicA.order === 'number' ? topicA.order : index;
+            const orderB = typeof topicB.order === 'number' ? topicB.order : targetIndex;
+
+            try {
+                // Swap orders
+                await updateDoc(doc(db, "topics", topicA.id), { order: orderB });
+                await updateDoc(doc(db, "topics", topicB.id), { order: orderA });
+            } catch(e) {
+                console.error("Reorder failed", e);
+                alert("Failed to reorder.");
+            }
+        };
+
         window.updateTopicName = async (id) => {
             const input = document.getElementById(`edit-input-${id}`);
             const newTitle = input.value.trim();
             if(!newTitle) return;
             
             try {
-                // Visual feedback
                 const btn = input.nextElementSibling;
                 const originalIcon = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
@@ -577,7 +618,6 @@
                     title: newTitle
                 });
                 
-                // Success feedback
                 btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 setTimeout(() => btn.innerHTML = originalIcon, 1500);
             } catch(e) {
@@ -597,15 +637,12 @@
         };
 
         async function calculateResults() {
-            // Fetch all votes
             const votesSnap = await getDocs(collection(db, "votes"));
             const allVotes = [];
             votesSnap.forEach(doc => allVotes.push(doc.data()));
 
-            // 1. Calculate Topic Scores
-            const scores = {}; // { topicId: { score: 0, 1st: 0, 2nd: 0, 3rd: 0, title: '' } }
+            const scores = {};
             
-            // Map IDs to titles from local topics array
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
 
@@ -622,10 +659,8 @@
                 processVote(v.vote3, 1, 'third');
             });
 
-            // Convert to array and sort
             const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
 
-            // Render Table
             const tbody = document.getElementById('adminTableBody');
             tbody.innerHTML = sortedTopics.map(t => `
                 <tr class="hover:bg-gray-800">
@@ -637,7 +672,6 @@
                 </tr>
             `).join('');
 
-            // 2. Calculate Skills
             const skills = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
             allVotes.forEach(v => {
                 if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
