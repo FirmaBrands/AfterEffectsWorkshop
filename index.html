@@ -23,28 +23,24 @@
                 extend: {
                     colors: {
                         ae: {
-                            dark: '#161616',
-                            panel: '#232323',
+                            dark: '#0a0a0f', // Deeper, slightly blueish black
+                            panel: '#1e1e24',
                             light: '#cfcfcf',
-                            purple: '#9999FF',
-                            accent: '#00D8A5', // Teal/Green accent
-                            hover: '#3a3a3a',
-                            selected: '#3d3d5c' // Dark purple tint
+                            purple: '#A882FF', // Slightly more vibrant
+                            accent: '#00E5FF', // Cyan accent
+                            hover: '#2a2a35',
+                            selected: '#3d3d5c'
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
                     animation: {
-                        'bounce-slight': 'bounce-slight 0.3s ease-in-out',
                         'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
-                        'pop-in': 'popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'pulse-glow': 'pulseGlow 2s infinite'
                     },
                     keyframes: {
-                        'bounce-slight': {
-                            '0%, 100%': { transform: 'scale(1)' },
-                            '50%': { transform: 'scale(0.97)' },
-                        },
                         fadeInUp: {
                             '0%': { opacity: '0', transform: 'translateY(20px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -52,6 +48,10 @@
                         popIn: {
                             '0%': { opacity: '0', transform: 'scale(0.5)' },
                             '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px rgba(168, 130, 255, 0.2)' },
+                            '50%': { boxShadow: '0 0 20px rgba(168, 130, 255, 0.6)' }
                         }
                     }
                 }
@@ -61,65 +61,67 @@
 
     <style>
         body {
-            background-color: #121212;
+            background-color: #0a0a0f;
             color: #e0e0e0;
-            padding-bottom: 80px; /* Space for sticky footer */
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Particle Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
         }
         
-        /* AE-like scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 30, 36, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        ::-webkit-scrollbar-track {
-            background: #161616; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #444; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555; 
-        }
+
+        /* AE Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
         .topic-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .topic-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 130, 255, 0.4);
         }
         
-        /* Selected State for Topic Card */
         .topic-selected {
-            border-color: #9999FF !important;
-            background-color: rgba(153, 153, 255, 0.15) !important;
-            box-shadow: 0 0 15px rgba(153, 153, 255, 0.15);
+            border-color: #A882FF !important;
+            background: rgba(168, 130, 255, 0.15) !important;
+            box-shadow: 0 0 20px rgba(168, 130, 255, 0.2);
         }
         
-        /* Rank Badge */
         .rank-badge {
-            background: #9999FF;
-            color: #000;
+            background: #A882FF;
+            color: #fff;
             font-weight: 800;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        .rank-badge-gold {
-            background: #FFD700; /* Gold */
-            color: black;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        .rank-badge-silver {
-            background: #C0C0C0; /* Silver */
-            color: black;
-        }
-        .rank-badge-bronze {
-            background: #CD7F32; /* Bronze */
-            color: black;
-        }
+        .rank-badge-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: black; }
+        .rank-badge-silver { background: linear-gradient(135deg, #E0E0E0, #B0B0B0); color: black; }
+        .rank-badge-bronze { background: linear-gradient(135deg, #CD7F32, #A0522D); color: black; }
 
-        /* Loaders */
         .spinner {
             border: 3px solid rgba(255,255,255,0.1);
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            border-left-color: #9999FF;
+            border-left-color: #A882FF;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -127,182 +129,226 @@
 </head>
 <body class="min-h-screen flex flex-col font-sans text-sm selection:bg-ae-purple selection:text-black">
 
+    <!-- Particle Background -->
+    <canvas id="particleCanvas"></canvas>
+
     <!-- Header -->
-    <header class="bg-ae-dark border-b border-gray-800 p-4 sticky top-0 z-40 shadow-lg">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#00005b] rounded-md flex items-center justify-center border border-ae-purple shadow-[0_0_10px_rgba(153,153,255,0.3)]">
+    <header class="glass-panel border-b-0 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-[#00005b] to-[#1a1a80] rounded-lg flex items-center justify-center border border-ae-purple shadow-[0_0_15px_rgba(168,130,255,0.4)]">
                     <span class="text-ae-purple font-bold text-lg">Ae</span>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide text-white">Workshop Planner</h1>
-                    <p class="text-xs text-gray-400">Curriculum Voting</p>
+                    <h1 class="font-bold text-lg tracking-wide text-white">Workshop<span class="text-ae-purple">.exp</span></h1>
+                    <p class="text-xs text-gray-400">Curriculum Votings</p>
                 </div>
             </div>
-            <div id="userInfo" class="text-xs text-gray-500"></div>
+            <div id="userInfo" class="text-xs font-mono text-ae-accent"></div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full space-y-12">
+    <main class="flex-grow p-4 md:p-8 max-w-6xl mx-auto w-full space-y-8 relative z-10">
 
-        <!-- Section 1: Introduction & Skill Level -->
-        <section id="introSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl animate-fade-in-up" style="animation-delay: 0.1s;">
-            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                <span class="text-ae-purple mr-2">01.</span> Your Experience
-            </h2>
-            <p class="text-gray-400 mb-6">Before we dive into topics, how comfortable are you with After Effects?</p>
+        <!-- Section 1: Intro -->
+        <section id="introSection" class="glass-panel p-8 rounded-2xl animate-fade-in-up" style="animation-delay: 0.1s;">
+            <div class="flex items-center gap-3 mb-6 border-b border-gray-700 pb-4">
+                <div class="w-8 h-8 rounded-full bg-ae-panel flex items-center justify-center text-ae-purple font-bold border border-gray-600">01</div>
+                <h2 class="text-xl font-semibold text-white">User Profile</h2>
+            </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-white group-hover:text-ae-accent">Newcomer</span>
-                        <i class="fa-solid fa-seedling text-gray-600 group-hover:text-ae-accent"></i>
-                    </div>
-                    <p class="text-xs text-gray-500">I've never opened it or only know the very basics.</p>
-                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                </button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase font-bold mb-3 tracking-wider">Your Name / Handle</label>
+                    <input type="text" id="userNameInput" placeholder="e.g. MotionMaster99" 
+                        class="w-full bg-[#0a0a0f] border border-gray-600 rounded-lg p-4 text-white focus:outline-none focus:border-ae-purple focus:shadow-[0_0_15px_rgba(168,130,255,0.2)] transition-all font-mono"
+                        oninput="saveNameLocally(this.value)">
+                </div>
 
-                <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-white group-hover:text-ae-accent">Comfortable</span>
-                        <i class="fa-solid fa-layer-group text-gray-600 group-hover:text-ae-accent"></i>
-                    </div>
-                    <p class="text-xs text-gray-500">I know keyframes, layers, and basic rendering.</p>
-                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                </button>
+                <div>
+                    <label class="block text-gray-400 text-xs uppercase font-bold mb-3 tracking-wider">Skill Level</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-3 rounded-lg bg-[#0a0a0f] border border-gray-600 hover:border-ae-accent hover:shadow-[0_0_10px_rgba(0,229,255,0.2)] transition-all text-center h-full">
+                            <i class="fa-solid fa-seedling text-2xl text-gray-500 group-hover:text-ae-accent mb-2 transition-colors"></i>
+                            <div class="font-bold text-white text-xs">Newcomer</div>
+                            <div class="absolute inset-0 border-2 border-ae-accent rounded-lg opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                        </button>
 
-                <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-white group-hover:text-ae-accent">Pro</span>
-                        <i class="fa-solid fa-wand-magic-sparkles text-gray-600 group-hover:text-ae-accent"></i>
+                        <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-3 rounded-lg bg-[#0a0a0f] border border-gray-600 hover:border-ae-purple hover:shadow-[0_0_10px_rgba(168,130,255,0.2)] transition-all text-center h-full">
+                            <i class="fa-solid fa-layer-group text-2xl text-gray-500 group-hover:text-ae-purple mb-2 transition-colors"></i>
+                            <div class="font-bold text-white text-xs">Comfortable</div>
+                            <div class="absolute inset-0 border-2 border-ae-purple rounded-lg opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                        </button>
+
+                        <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-3 rounded-lg bg-[#0a0a0f] border border-gray-600 hover:border-pink-500 hover:shadow-[0_0_10px_rgba(236,72,153,0.2)] transition-all text-center h-full">
+                            <i class="fa-solid fa-wand-magic-sparkles text-2xl text-gray-500 group-hover:text-pink-500 mb-2 transition-colors"></i>
+                            <div class="font-bold text-white text-xs">Pro</div>
+                            <div class="absolute inset-0 border-2 border-pink-500 rounded-lg opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                        </button>
                     </div>
-                    <p class="text-xs text-gray-500">I dream in expressions and graph editors.</p>
-                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                </button>
+                </div>
             </div>
             <input type="hidden" id="selectedSkill" value="">
         </section>
 
         <!-- Section 2: Voting -->
         <section id="votingSection" class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
-            <h2 class="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2 flex flex-wrap justify-between items-end gap-2">
-                <span><span class="text-ae-purple mr-2">02.</span> Select & Rank Topics</span>
-                <div class="flex flex-col items-end">
-                    <span class="text-xs font-normal text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">Click in order of preference (#1, #2, #3...)</span>
+            <div class="glass-panel p-6 rounded-t-2xl border-b border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-ae-panel flex items-center justify-center text-ae-purple font-bold border border-gray-600">02</div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-white">Select Priorities</h2>
+                        <p class="text-gray-400 text-xs">Click in order of importance.</p>
+                    </div>
                 </div>
-            </h2>
+                <div class="flex gap-3 items-center">
+                    <div class="text-[10px] uppercase font-bold tracking-wider text-gray-500 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-ae-accent animate-pulse"></span>
+                        Live Voting
+                    </div>
+                     <button onclick="clearAllSelections()" class="text-xs text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/30 px-3 py-1.5 rounded-full transition-all">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset
+                    </button>
+                </div>
+            </div>
 
-            <!-- Topic Grid -->
-            <div class="mb-6 flex justify-between items-center">
-                <h3 class="text-gray-400 text-sm">Available Topics</h3>
-                <button onclick="toggleNewTopicForm()" class="text-xs text-ae-purple hover:text-white border border-ae-purple hover:bg-ae-purple hover:bg-opacity-20 px-3 py-1.5 rounded transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Suggest New
+            <!-- Suggestion Bar -->
+            <div class="bg-ae-panel/80 p-4 border-x border-gray-700/50 flex justify-between items-center backdrop-blur-sm">
+                <div class="text-xs text-gray-400 font-mono">AVAILABLE MODULES</div>
+                <button onclick="toggleNewTopicForm()" class="text-xs bg-ae-purple/10 text-ae-purple border border-ae-purple/50 hover:bg-ae-purple hover:text-white px-4 py-1.5 rounded transition-all">
+                    + Suggest New
                 </button>
             </div>
 
-            <!-- New Topic Form (Hidden) -->
-            <div id="newTopicForm" class="hidden mb-6 bg-ae-panel border border-ae-purple p-4 rounded relative animate-fade-in shadow-lg">
-                <h4 class="text-white text-sm font-bold mb-2">Suggest a Topic</h4>
-                <div class="flex gap-2">
-                    <input type="text" id="newTopicInput" placeholder="e.g. 3D Camera Tracking..." class="flex-grow bg-ae-dark border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-ae-purple text-sm">
-                    <button onclick="submitNewTopic()" class="bg-ae-purple text-black font-bold px-4 py-2 rounded text-sm hover:bg-white transition-colors">Add</button>
+             <!-- New Topic Form -->
+             <div id="newTopicForm" class="hidden bg-ae-dark border-x border-gray-700 p-4 relative animate-fade-in border-b border-gray-700">
+                <div class="flex gap-2 max-w-md ml-auto">
+                    <input type="text" id="newTopicInput" placeholder="Enter topic name..." class="flex-grow bg-[#0a0a0f] border border-gray-600 rounded px-3 py-2 text-white text-sm focus:border-ae-accent outline-none">
+                    <button onclick="submitNewTopic()" class="bg-ae-panel border border-gray-600 hover:bg-white hover:text-black px-4 py-2 rounded text-sm transition-colors font-bold">Add</button>
                 </div>
             </div>
 
-            <!-- Topics Container -->
-            <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- Topics will be injected here via JS -->
-                <div class="col-span-full flex items-center justify-center h-32">
+            <!-- Categories & Topics -->
+            <div id="topicsContainer" class="glass-panel p-6 rounded-b-2xl min-h-[200px]">
+                 <div class="flex items-center justify-center h-32">
                     <div class="spinner"></div>
                 </div>
             </div>
         </section>
 
+        <!-- Section 3: Comments -->
+        <section id="commentsSection" class="glass-panel p-8 rounded-2xl animate-fade-in-up mb-12" style="animation-delay: 0.3s;">
+             <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-ae-panel flex items-center justify-center text-ae-purple font-bold border border-gray-600">03</div>
+                <h2 class="text-xl font-semibold text-white">Specific Requests</h2>
+            </div>
+            <div class="relative">
+                <textarea id="commentsInput" rows="3" class="w-full bg-[#0a0a0f] border border-gray-600 rounded-lg p-4 text-white focus:outline-none focus:border-ae-purple focus:shadow-[0_0_15px_rgba(168,130,255,0.1)] text-sm transition-all" placeholder="Any specific plugins, workflows, or project types you want to cover?"></textarea>
+                <div class="absolute bottom-3 right-3 text-gray-600 text-[10px] pointer-events-none">OPTIONAL</div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- Sticky Footer Action Bar -->
-    <div id="stickyFooter" class="fixed bottom-0 left-0 right-0 bg-ae-panel border-t border-ae-purple shadow-[0_-5px_20px_rgba(0,0,0,0.5)] transform translate-y-full transition-transform duration-300 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-ae-purple bg-opacity-20 text-ae-purple px-3 py-1 rounded-full text-xs font-bold border border-ae-purple">
-                    <span id="selectionCount">0</span> Ranked
+    <!-- Sticky Footer -->
+    <div id="stickyFooter" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 translate-y-32 transition-transform duration-500 z-50">
+        <div class="bg-ae-panel/90 backdrop-blur-xl border border-ae-purple/50 shadow-[0_0_30px_rgba(0,0,0,0.5)] rounded-full px-6 py-3 flex items-center gap-6">
+            <div class="flex items-center gap-3 pr-4 border-r border-gray-600">
+                <div class="bg-ae-purple text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">
+                    <span id="selectionCount">0</span>
                 </div>
-                <span class="text-gray-400 text-xs hidden md:inline">Great choices! Ready to submit?</span>
+                <div class="flex flex-col">
+                    <span class="text-white text-sm font-bold">Topics Ranked</span>
+                    <span class="text-[10px] text-gray-400">Ready to submit?</span>
+                </div>
             </div>
             
-            <button id="submitBtn" onclick="submitVotes()" class="bg-ae-purple hover:bg-white text-black font-bold px-6 py-2 rounded shadow-lg transition-colors flex items-center gap-2">
-                <span>Submit Votes</span>
-                <i class="fa-solid fa-paper-plane"></i>
+            <button id="submitBtn" onclick="submitVotes()" class="group bg-gradient-to-r from-ae-purple to-[#8a63ff] hover:to-white hover:from-white hover:text-black text-white font-bold px-6 py-2 rounded-full shadow-lg transition-all flex items-center gap-2">
+                <span>Submit</span>
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </button>
         </div>
     </div>
 
-    <!-- Success Message (Hidden) -->
-    <div id="successMessage" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center">
-        <div class="bg-ae-panel p-8 rounded-lg border border-ae-accent shadow-2xl max-w-md text-center transform transition-all scale-100">
-            <div class="w-16 h-16 bg-ae-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-ae-accent">
-                <i class="fa-solid fa-check text-2xl text-ae-accent"></i>
+    <!-- Success Modal -->
+    <div id="successMessage" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+        <div class="bg-[#1e1e24] p-10 rounded-3xl border border-ae-accent shadow-[0_0_50px_rgba(0,229,255,0.15)] max-w-md text-center transform scale-100 animate-pop-in relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-ae-accent/10 to-transparent pointer-events-none"></div>
+            
+            <div class="w-20 h-20 bg-ae-accent/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-ae-accent shadow-[0_0_20px_rgba(0,229,255,0.3)]">
+                <i class="fa-solid fa-check text-3xl text-ae-accent"></i>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">Votes Recorded!</h2>
-            <p class="text-gray-400 mb-6">Thank you for helping shape the workshop curriculum.</p>
-            <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 text-white font-medium px-6 py-2 rounded transition-colors">Back to Home</button>
+            <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">Confirmed.</h2>
+            <p class="text-gray-400 mb-8 leading-relaxed">Your preferences have been logged in the system. Get ready to render.</p>
+            <button onclick="location.reload()" class="bg-gray-800 hover:bg-white hover:text-black border border-gray-600 text-white font-medium px-8 py-3 rounded-full transition-all w-full">Back to Planner</button>
         </div>
     </div>
 
-    <!-- Admin Panel (Hidden by default) -->
-    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#121212] overflow-auto">
-        <div class="max-w-6xl mx-auto p-8">
-            <div class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-                <h1 class="text-2xl font-bold text-white"><span class="text-ae-purple">Admin</span> Dashboard</h1>
-                <button onclick="closeAdmin()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark fa-xl"></i></button>
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#0a0a0f] overflow-auto">
+        <div class="max-w-7xl mx-auto p-8">
+            <div class="flex justify-between items-center mb-12 border-b border-gray-800 pb-6 sticky top-0 bg-[#0a0a0f]/95 backdrop-blur z-10 pt-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-1"><span class="text-ae-purple">Admin</span> Console</h1>
+                    <p class="text-xs text-gray-500 font-mono">REAL-TIME DATA VISUALIZATION</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="copyAdminReport()" class="bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
+                        <i class="fa-regular fa-copy"></i> Copy Report
+                    </button>
+                    <button onclick="closeAdmin()" class="w-10 h-10 rounded-full bg-gray-800 hover:bg-white hover:text-black transition-colors flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <!-- Stats -->
-                <div class="bg-ae-panel p-6 rounded border border-gray-700">
-                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Skill Distribution</h3>
+                <div class="glass-panel p-6 rounded-2xl border border-gray-700 h-fit">
+                    <h3 class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-6">Skill Breakdown</h3>
                     <div class="relative h-48">
                         <canvas id="skillChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Leaderboard -->
-                <div class="lg:col-span-2 bg-ae-panel p-6 rounded border border-gray-700">
-                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Topic Demand (Weighted Score)</h3>
+                <div class="lg:col-span-3 glass-panel p-6 rounded-2xl border border-gray-700">
+                    <h3 class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-6">Topic Leaderboard (Weighted)</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-gray-400">
-                            <thead class="text-xs uppercase bg-ae-dark text-gray-500">
+                            <thead class="text-xs uppercase bg-black/20 text-gray-500">
                                 <tr>
-                                    <th class="px-4 py-3">Topic</th>
+                                    <th class="px-4 py-3 rounded-l-lg">Topic</th>
                                     <th class="px-4 py-3 text-right">Score</th>
-                                    <th class="px-4 py-3 w-1/3">Popularity</th>
+                                    <th class="px-4 py-3 w-1/3 rounded-r-lg">Popularity</th>
                                 </tr>
                             </thead>
-                            <tbody id="adminTableBody" class="divide-y divide-gray-800">
+                            <tbody id="adminTableBody" class="divide-y divide-gray-800/50">
                                 <!-- Admin Rows -->
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-4">* Scoring: 1st=3pts, 2nd=2pts, Others=1pt</p>
                 </div>
 
-                <!-- Manage Topics Section -->
-                <div class="col-span-1 lg:col-span-3 bg-ae-panel p-6 rounded border border-gray-700 mt-2">
-                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Manage Topics</h3>
-                    <p class="text-xs text-gray-500 mb-4">Reorder, rename or remove topics. Order reflects on the main page.</p>
-                    <div id="adminTopicsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Comments -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-gray-700">
+                    <h3 class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-6">Incoming Requests</h3>
+                    <div id="adminCommentsList" class="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto pr-2 custom-scroll">
+                        <!-- JS injected comments -->
+                    </div>
+                </div>
+
+                <!-- Manage Topics -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-gray-700">
+                    <h3 class="text-gray-400 uppercase text-[10px] font-bold tracking-widest mb-6">Database Management</h3>
+                    <div id="adminTopicsList" class="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto pr-2 custom-scroll">
                         <!-- JS injected admin tools -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <footer class="bg-ae-dark border-t border-gray-800 p-6 text-center">
-        <p class="text-gray-600 text-xs">&copy; 2025 Workshop Planner</p>
-        <button onclick="openAdmin()" class="mt-2 text-[10px] text-gray-700 hover:text-ae-purple transition-colors">Admin Access</button>
-    </footer>
 
     <!-- Firebase Logic -->
     <script type="module">
@@ -321,14 +367,82 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- PARTICLE BACKGROUND SYSTEM ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(168, 130, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for(let i=0; i<60; i++) particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for(let i=0; i<particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                // Link lines
+                for(let j=i; j<particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    if(distance < 150) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(168, 130, 255, ${0.1 - distance/1500})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
+        // ----------------------------------
+
         // Global State
         let topics = [];
-        let selectedTopicIds = []; // ARRAY now, to preserve Order!
+        let selectedTopicIds = []; 
         let skillLevel = null;
+        let userName = localStorage.getItem('ae_voter_name') || '';
+        
         const userId = localStorage.getItem('ae_voter_id') || 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('ae_voter_id', userId);
 
-        // Predefined topics if DB is empty
+        // Predefined topics with categories (implicitly via titles or simple list for now)
+        // We will add simple categorization logic in render
         const defaultTopics = [
             "UI Animation Basics",
             "Masking & Rotoscoping",
@@ -344,42 +458,37 @@
             "Particle Effects"
         ];
 
-        // --- Core Logic ---
-
-        // Initialize
         async function init() {
-            // Fetch topics
+            if(userName) {
+                document.getElementById('userNameInput').value = userName;
+                updateHeaderName();
+            }
+
             const q = collection(db, "topics");
-            
             onSnapshot(q, (snapshot) => {
                 const fetchedTopics = [];
                 snapshot.forEach((doc) => {
                     fetchedTopics.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // If empty, seed defaults
                 if (fetchedTopics.length === 0) {
                     seedDefaults();
                 } else {
-                    // Sort in memory
                     topics = fetchedTopics.sort((a, b) => {
                         const orderA = typeof a.order === 'number' ? a.order : 9999;
                         const orderB = typeof b.order === 'number' ? b.order : 9999;
                         if (orderA !== orderB) return orderA - orderB;
                         return a.title.localeCompare(b.title);
                     });
-                    
                     renderTopics();
                     renderManageTopics(); 
                 }
                 
-                // If admin is open, refresh admin
                 if(!document.getElementById('adminPanel').classList.contains('hidden')){
                     calculateResults();
                 }
             });
 
-            // Check URL for admin
             const urlParams = new URLSearchParams(window.location.search);
             if(urlParams.get('admin') === 'true') {
                 openAdmin();
@@ -397,71 +506,82 @@
             }
         }
 
-        // Render Topics
+        window.saveNameLocally = (val) => {
+            userName = val;
+            localStorage.setItem('ae_voter_name', val);
+            updateHeaderName();
+        }
+
+        function updateHeaderName() {
+            const el = document.getElementById('userInfo');
+            el.innerHTML = userName ? `<span class="text-gray-500 mr-1">User:</span>${userName}` : '';
+        }
+
         function renderTopics() {
             const container = document.getElementById('topicsContainer');
             container.innerHTML = '';
+            
+            // We'll use a CSS Grid
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
 
             topics.forEach(topic => {
                 const rankIndex = selectedTopicIds.indexOf(topic.id);
                 const isSelected = rankIndex !== -1;
                 const rank = rankIndex + 1;
                 
-                // Determine Badge Style
                 let badgeClass = 'rank-badge';
                 if(rank === 1) badgeClass += ' rank-badge-gold';
                 else if(rank === 2) badgeClass += ' rank-badge-silver';
                 else if(rank === 3) badgeClass += ' rank-badge-bronze';
 
                 const card = document.createElement('div');
-                card.className = `topic-card relative p-4 rounded-lg border cursor-pointer select-none flex flex-col items-center justify-center text-center h-28 hover:bg-ae-panel transition-all 
-                    ${isSelected ? 'topic-selected bg-ae-panel border-ae-purple' : 'bg-ae-panel/50 border-gray-700 hover:border-gray-500'}`;
+                card.className = `topic-card relative p-5 rounded-xl border cursor-pointer select-none flex flex-col items-center justify-center text-center h-32 hover:bg-ae-panel transition-all 
+                    ${isSelected ? 'topic-selected bg-ae-panel border-ae-purple' : 'bg-[#0a0a0f]/50 border-gray-700 hover:border-gray-500'}`;
                 
                 card.onclick = () => toggleTopicSelection(topic.id);
 
+                // Shorten Title for visuals if needed, or keep full
                 card.innerHTML = `
-                    <div class="absolute top-2 right-2 animate-pop-in ${isSelected ? 'block' : 'hidden'}">
-                        <div class="${badgeClass} w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg">
+                    <div class="absolute top-0 right-0 p-3 animate-pop-in ${isSelected ? 'block' : 'hidden'}">
+                        <div class="${badgeClass} w-8 h-8 rounded-lg transform rotate-3 flex items-center justify-center text-sm shadow-xl border border-white/20">
                             ${rank}
                         </div>
                     </div>
-                    <span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'} pointer-events-none transition-colors">${topic.title}</span>
+                    <span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'} pointer-events-none transition-colors z-10 leading-snug">${topic.title}</span>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-ae-purple to-transparent opacity-0 transition-opacity ${isSelected ? 'opacity-50' : ''}"></div>
                 `;
-                container.appendChild(card);
+                grid.appendChild(card);
             });
-            
+            container.appendChild(grid);
             updateFooter();
         }
 
-        // Voting Logic (Ordered Array)
         window.toggleTopicSelection = (topicId) => {
             const index = selectedTopicIds.indexOf(topicId);
-            
-            if (index !== -1) {
-                // Deselect: Remove and shift others up
-                selectedTopicIds.splice(index, 1);
-            } else {
-                // Select: Add to end
-                selectedTopicIds.push(topicId);
-            }
+            if (index !== -1) selectedTopicIds.splice(index, 1);
+            else selectedTopicIds.push(topicId);
             renderTopics(); 
         };
+
+        window.clearAllSelections = () => {
+            selectedTopicIds = [];
+            renderTopics();
+        }
 
         function updateFooter() {
             const footer = document.getElementById('stickyFooter');
             const countEl = document.getElementById('selectionCount');
             const count = selectedTopicIds.length;
-            
             countEl.textContent = count;
             
             if (count > 0 || skillLevel) {
-                footer.classList.remove('translate-y-full');
+                footer.classList.remove('translate-y-32');
             } else {
-                footer.classList.add('translate-y-full');
+                footer.classList.add('translate-y-32');
             }
         }
 
-        // Skill Logic
         window.selectSkill = (level) => {
             skillLevel = level;
             document.getElementById('selectedSkill').value = level;
@@ -470,7 +590,7 @@
                 const ring = btn.querySelector('.check-ring');
                 ring.classList.remove('opacity-100', 'scale-100');
                 ring.classList.add('opacity-0', 'scale-95');
-                btn.classList.remove('bg-gray-800', 'border-ae-accent');
+                btn.classList.remove('bg-[#0a0a0f]');
             });
 
             const targetBtn = Array.from(document.querySelectorAll('.skill-btn')).find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Comfortable' : 'Pro'));
@@ -478,14 +598,11 @@
                 const ring = targetBtn.querySelector('.check-ring');
                 ring.classList.add('opacity-100', 'scale-100');
                 ring.classList.remove('opacity-0', 'scale-95');
-                targetBtn.classList.add('bg-gray-800', 'border-ae-accent');
+                targetBtn.classList.add('bg-ae-panel');
             }
-
-            document.getElementById('votingSection').scrollIntoView({behavior: 'smooth', block: 'start'});
             updateFooter();
         }
 
-        // Add New Topic
         window.toggleNewTopicForm = () => {
             document.getElementById('newTopicForm').classList.toggle('hidden');
         };
@@ -494,10 +611,8 @@
             const input = document.getElementById('newTopicInput');
             const title = input.value.trim();
             if (!title) return;
-
             try {
                 const maxOrder = topics.reduce((max, t) => Math.max(max, typeof t.order === 'number' ? t.order : -1), -1);
-
                 await addDoc(collection(db, "topics"), {
                     title: title,
                     order: maxOrder + 1,
@@ -512,9 +627,10 @@
             }
         };
 
-        // Final Submit
         window.submitVotes = async () => {
             const btn = document.getElementById('submitBtn');
+            const comments = document.getElementById('commentsInput').value;
+
             if (selectedTopicIds.length === 0) {
                 alert("Please select at least one topic.");
                 return;
@@ -530,17 +646,18 @@
             try {
                 await addDoc(collection(db, "votes"), {
                     userId: userId,
+                    userName: userName || 'Anonymous',
                     skillLevel: skillLevel,
-                    selectedTopics: selectedTopicIds, // Saved as Ordered Array
+                    selectedTopics: selectedTopicIds,
+                    comments: comments,
                     submittedAt: serverTimestamp()
                 });
-                
                 document.getElementById('successMessage').classList.remove('hidden');
-                document.getElementById('stickyFooter').classList.add('translate-y-full'); 
+                document.getElementById('stickyFooter').classList.add('translate-y-32'); 
             } catch (e) {
                 console.error("Error submitting votes: ", e);
                 alert("Error submitting. Please try again.");
-                btn.innerHTML = '<span>Submit Votes</span><i class="fa-solid fa-paper-plane"></i>';
+                btn.innerHTML = '<span>Submit</span>';
             }
         };
 
@@ -553,7 +670,6 @@
                 alert("Incorrect password.");
                 return;
             }
-
             document.getElementById('adminPanel').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             calculateResults();
@@ -570,7 +686,7 @@
             if(!list) return;
 
             list.innerHTML = topics.map((t, index) => `
-                <div class="bg-gray-800 p-2 pl-3 rounded flex items-center gap-2 group border border-gray-700 hover:border-gray-500 transition-colors">
+                <div class="bg-black/30 p-2 pl-3 rounded flex items-center gap-2 group border border-gray-700 hover:border-ae-purple transition-colors">
                     <div class="flex flex-col gap-0.5 mr-1">
                         <button onclick="moveTopic(${index}, -1)" class="text-gray-500 hover:text-white text-[10px] ${index === 0 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-up"></i></button>
                         <button onclick="moveTopic(${index}, 1)" class="text-gray-500 hover:text-white text-[10px] ${index === topics.length - 1 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-down"></i></button>
@@ -580,15 +696,10 @@
                         class="bg-transparent border-none focus:outline-none focus:text-ae-purple text-gray-300 flex-grow text-xs font-medium" 
                         placeholder="Topic Name">
                     
-                    <button onclick="updateTopicName('${t.id}')" title="Save Changes" 
-                        class="text-gray-600 hover:text-ae-accent p-2 rounded transition-colors">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                    </button>
-                    
-                    <button onclick="deleteTopic('${t.id}')" title="Delete Topic" 
-                        class="text-gray-600 hover:text-red-500 p-2 rounded transition-colors">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button onclick="updateTopicName('${t.id}')" title="Save" 
+                        class="text-gray-600 hover:text-ae-accent p-2 rounded transition-colors"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button onclick="deleteTopic('${t.id}')" title="Delete" 
+                        class="text-gray-600 hover:text-red-500 p-2 rounded transition-colors"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
@@ -596,12 +707,10 @@
         window.moveTopic = async (index, direction) => {
             const targetIndex = index + direction;
             if (targetIndex < 0 || targetIndex >= topics.length) return;
-
             const topicA = topics[index];
             const topicB = topics[targetIndex];
             const orderA = typeof topicA.order === 'number' ? topicA.order : index;
             const orderB = typeof topicB.order === 'number' ? topicB.order : targetIndex;
-
             try {
                 await updateDoc(doc(db, "topics", topicA.id), { order: orderB });
                 await updateDoc(doc(db, "topics", topicB.id), { order: orderA });
@@ -613,12 +722,7 @@
             const newTitle = input.value.trim();
             if(!newTitle) return;
             try {
-                const btn = input.nextElementSibling;
-                const originalIcon = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
                 await updateDoc(doc(db, "topics", id), { title: newTitle });
-                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-                setTimeout(() => btn.innerHTML = originalIcon, 1500);
             } catch(e) { console.error("Error updating topic:", e); }
         };
 
@@ -627,69 +731,102 @@
             try { await deleteDoc(doc(db, "topics", id)); } catch(e) { console.error("Error deleting", e); }
         };
 
-        // Updated for Ranking System
+        // --- RESULTS & REPORTING ---
+
         async function calculateResults() {
             const votesSnap = await getDocs(collection(db, "votes"));
             const allVotes = [];
             votesSnap.forEach(doc => allVotes.push(doc.data()));
 
-            const scores = {}; // { topicId: { score: 0, title: '' } }
+            const scores = {}; 
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
 
+            const commentsContainer = document.getElementById('adminCommentsList');
+            commentsContainer.innerHTML = '';
+
             allVotes.forEach(v => {
-                // New System (Array of IDs, ordered by preference)
+                if(v.comments) {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'bg-black/30 p-3 rounded-lg border border-gray-700 text-xs mb-2';
+                    commentEl.innerHTML = `
+                        <div class="flex justify-between mb-1">
+                            <span class="text-ae-purple font-bold">${v.userName || 'Anonymous'}</span>
+                            <span class="text-[10px] text-gray-500 uppercase tracking-wider">${v.skillLevel || 'N/A'}</span>
+                        </div>
+                        <div class="text-gray-300 italic">"${v.comments}"</div>`;
+                    commentsContainer.appendChild(commentEl);
+                }
+
                 if (v.selectedTopics && Array.isArray(v.selectedTopics)) {
                     v.selectedTopics.forEach((topicId, index) => {
                         if (!scores[topicId]) scores[topicId] = { score: 0, title: topicMap[topicId] || 'Unknown' };
-                        
-                        // Weighted Scoring: 1st=3, 2nd=2, 3rd+=1
+                        // Weighted Scoring
                         let points = 1;
                         if(index === 0) points = 3;
                         else if(index === 1) points = 2;
-                        
                         scores[topicId].score += points;
                     });
-                } 
-                // Legacy System Fallback (vote1=3pts, vote2=2pts, vote3=1pt)
-                else if (v.vote1) {
+                } else if (v.vote1) { // Legacy support
                     if(v.vote1 && scores[v.vote1] === undefined) scores[v.vote1] = { score: 0, title: topicMap[v.vote1] };
                     if(v.vote1) scores[v.vote1].score += 3;
-
                     if(v.vote2 && scores[v.vote2] === undefined) scores[v.vote2] = { score: 0, title: topicMap[v.vote2] };
                     if(v.vote2) scores[v.vote2].score += 2;
-
                     if(v.vote3 && scores[v.vote3] === undefined) scores[v.vote3] = { score: 0, title: topicMap[v.vote3] };
                     if(v.vote3) scores[v.vote3].score += 1;
                 }
             });
 
-            // Sort by score
+            if(commentsContainer.innerHTML === '') {
+                commentsContainer.innerHTML = '<div class="text-gray-600 text-xs text-center py-4">No comments recorded.</div>';
+            }
+
             const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
             const maxScore = sortedTopics.length > 0 ? sortedTopics[0].score : 1;
 
-            // Render Table
             const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = sortedTopics.map(t => {
+            tbody.innerHTML = sortedTopics.map((t, i) => {
                 const width = (t.score / maxScore) * 100;
+                let rankColor = 'text-gray-400';
+                if(i===0) rankColor = 'text-yellow-400';
+                if(i===1) rankColor = 'text-gray-300';
+                if(i===2) rankColor = 'text-orange-400';
+
                 return `
-                <tr class="hover:bg-gray-800">
-                    <td class="px-4 py-3 font-medium text-white">${t.title}</td>
-                    <td class="px-4 py-3 text-right text-ae-accent font-bold">${t.score}</td>
+                <tr class="hover:bg-white/5 transition-colors group">
+                    <td class="px-4 py-3 font-medium text-white flex items-center gap-3">
+                        <span class="font-mono text-xs ${rankColor} w-4">${i+1}</span>
+                        ${t.title}
+                    </td>
+                    <td class="px-4 py-3 text-right text-white font-bold font-mono">${t.score}</td>
                     <td class="px-4 py-3">
-                        <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-ae-purple" style="width: ${width}%"></div>
+                        <div class="h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                            <div class="h-full bg-gradient-to-r from-ae-purple to-ae-accent" style="width: ${width}%"></div>
                         </div>
                     </td>
                 </tr>
             `}).join('');
 
-            // Skills Chart
             const skills = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
-            allVotes.forEach(v => {
-                if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
-            });
+            allVotes.forEach(v => { if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++; });
             renderChart(skills);
+            
+            // Store for Copy Report
+            window.lastSortedResults = sortedTopics;
+        }
+
+        window.copyAdminReport = () => {
+             const results = window.lastSortedResults || [];
+             let text = "*After Effects Workshop Voting Results*\n\n";
+             text += "*Top Requested Topics:*\n";
+             results.slice(0, 5).forEach((t, i) => {
+                 text += `${i+1}. ${t.title} (Score: ${t.score})\n`;
+             });
+             text += "\n_Generated via Workshop Planner_";
+             
+             navigator.clipboard.writeText(text).then(() => {
+                 alert("Report copied to clipboard!");
+             });
         }
 
         let chartInstance = null;
@@ -703,16 +840,16 @@
                     labels: ['Newcomer', 'Comfortable', 'Pro'],
                     datasets: [{
                         data: [data.Beginner, data.Intermediate, data.Advanced],
-                        backgroundColor: ['#4ade80', '#9999FF', '#f43f5e'],
-                        borderColor: '#232323',
-                        borderWidth: 2
+                        backgroundColor: ['#00E5FF', '#A882FF', '#EC4899'],
+                        borderColor: '#1e1e24',
+                        borderWidth: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 10 } } }
+                        legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 10, family: 'Inter' }, usePointStyle: true } }
                     }
                 }
             });
