@@ -7,6 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -19,6 +20,7 @@
                     colors: {
                         bg: { main: '#050505', card: '#0f0f10', glass: 'rgba(20, 20, 23, 0.7)' },
                         brand: { primary: '#6d28d9', secondary: '#00d8a5' },
+                        rank: { gold: '#FFD700', silver: '#C0C0C0', bronze: '#CD7F32' }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
@@ -35,25 +37,25 @@
 
     <style>
         body { background-color: #050505; color: #ffffff; }
-        
         .ambient-glow { position: fixed; width: 600px; height: 600px; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none; }
         .glow-1 { top: -100px; left: -100px; background: #6d28d9; }
         .glow-2 { bottom: -100px; right: -100px; background: #00d8a5; }
-
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .glass-panel { background: #0f0f10; border: 1px solid rgba(255, 255, 255, 0.08); }
-
         .card-selected { background: rgba(255, 255, 255, 0.08) !important; transform: scale(1.02); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
-        
         .add-card { border: 1px dashed rgba(255,255,255,0.3); background: rgba(255,255,255,0.02); }
         .add-card:hover { border-color: #00d8a5; background: rgba(0, 216, 165, 0.05); }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050505; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-
         .loader { width: 20px; height: 20px; border: 2px solid #333; border-bottom-color: #fff; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Drag Styles */
+        .sortable-ghost { opacity: 0.4; background: #333; }
+        .sortable-drag { cursor: grabbing; background: #1a1a1a; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col selection:bg-brand-primary selection:text-white pb-32">
@@ -218,10 +220,11 @@
                 <div class="lg:col-span-4 space-y-8">
                     
                     <div class="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6">
-                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Topic Manager</h3>
-                        <div class="text-[10px] text-gray-500 mb-2">Reorder to change display priority.</div>
-                        
-                        <div id="adminTopicsList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Reorder Topics</h3>
+                            <span class="text-[10px] text-gray-600 bg-gray-900 px-2 py-1 rounded">Drag handle <i class="fa-solid fa-grip-lines ml-1"></i></span>
+                        </div>
+                        <div id="adminTopicsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             </div>
                     </div>
 
@@ -243,7 +246,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
@@ -422,64 +425,60 @@
             document.body.style.overflow = 'auto';
         };
 
+        // Renders the list and Initializes SortableJS
+        let sortableInstance = null;
         function renderManageTopics() {
             const list = document.getElementById('adminTopicsList');
             if(!list) return;
-            
-            list.innerHTML = topics.map((t, idx) => `
-                <div class="flex items-center gap-3 bg-gray-900/80 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-all group">
+
+            // Generate HTML with data-id attributes for drag tracking
+            list.innerHTML = topics.map((t) => `
+                <div class="flex items-center gap-3 bg-gray-900 p-2 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors group" data-id="${t.id}">
                     
-                    <div class="flex flex-col gap-1 items-center justify-center bg-black/40 rounded px-1 py-1 border border-white/5">
-                        <button onclick="moveTopic(${idx},-1)" class="text-gray-500 hover:text-white transition-colors ${idx===0?'opacity-20 pointer-events-none':''}" title="Move Up">
-                            <i class="fa-solid fa-caret-up text-xs"></i>
-                        </button>
-                        <span class="text-[10px] font-mono text-gray-600 font-bold select-none leading-none">${idx+1}</span>
-                        <button onclick="moveTopic(${idx},1)" class="text-gray-500 hover:text-white transition-colors ${idx===topics.length-1?'opacity-20 pointer-events-none':''}" title="Move Down">
-                            <i class="fa-solid fa-caret-down text-xs"></i>
-                        </button>
+                    <div class="drag-handle text-gray-600 hover:text-white px-2 cursor-grab">
+                        <i class="fa-solid fa-grip-vertical"></i>
                     </div>
 
-                    <div class="flex-grow">
-                        <input id="edit-${t.id}" value="${t.title}" class="bg-transparent text-sm font-medium text-gray-300 w-full focus:outline-none focus:text-white placeholder-gray-600 border-b border-transparent focus:border-brand-primary/50 py-1 transition-colors">
-                    </div>
-
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="updateTopicName('${t.id}')" class="w-8 h-8 rounded hover:bg-white/10 text-gray-500 hover:text-brand-secondary transition-colors" title="Save Name">
-                            <i class="fa-solid fa-check"></i>
-                        </button>
-                        <button onclick="deleteTopic('${t.id}')" class="w-8 h-8 rounded hover:bg-white/10 text-gray-500 hover:text-red-500 transition-colors" title="Delete Topic">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
+                    <input id="edit-${t.id}" value="${t.title}" class="bg-transparent text-xs font-medium text-gray-300 w-full focus:outline-none px-1">
+                    
+                    <button onclick="updateTopicName('${t.id}')" class="text-gray-600 hover:text-brand-primary p-2 opacity-50 group-hover:opacity-100 transition-opacity" title="Save"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button onclick="deleteTopic('${t.id}')" class="text-gray-600 hover:text-red-500 p-2 opacity-50 group-hover:opacity-100 transition-opacity" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
+
+            // Initialize Sortable logic
+            if(sortableInstance) sortableInstance.destroy(); // clean up old instance
+            sortableInstance = new Sortable(list, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: async function(evt) {
+                    // Reorder Logic: Batch update all items to new indexes
+                    const newOrderIds = Array.from(list.children).map(child => child.getAttribute('data-id'));
+                    const batch = writeBatch(db);
+                    
+                    newOrderIds.forEach((id, index) => {
+                        const ref = doc(db, "topics", id);
+                        batch.update(ref, { order: index });
+                    });
+
+                    try {
+                        await batch.commit();
+                        console.log("Order updated successfully");
+                    } catch(e) {
+                        console.error("Batch update failed", e);
+                        alert("Failed to save order");
+                    }
+                }
+            });
         }
-
-        // ROBUST MOVE FUNCTION
-        window.moveTopic = async (idx, dir) => {
-            const itemA = topics[idx];
-            const itemB = topics[idx + dir];
-            if (!itemA || !itemB) return;
-
-            // Strict Swap Logic: ensure we have numbers to swap
-            // If DB order is missing, fallback to current array index
-            const orderA = typeof itemA.order === 'number' ? itemA.order : idx;
-            const orderB = typeof itemB.order === 'number' ? itemB.order : (idx + dir);
-
-            try {
-                // Swap the values in the DB
-                await updateDoc(doc(db, "topics", itemA.id), { order: orderB });
-                await updateDoc(doc(db, "topics", itemB.id), { order: orderA });
-            } catch(e) {
-                console.error("Order update failed", e);
-            }
-        };
 
         window.updateTopicName = async (id) => {
             const val = document.getElementById(`edit-${id}`).value;
             if(val) await updateDoc(doc(db, "topics", id), { title: val });
         };
-        window.deleteTopic = async (id) => { if(confirm("Delete this topic?")) await deleteDoc(doc(db, "topics", id)); };
+        window.deleteTopic = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "topics", id)); };
 
         async function calculateResults() {
             const snap = await getDocs(collection(db, "votes"));
