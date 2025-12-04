@@ -3,47 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AE Workshop | Curriculum</title>
+    <title>Workshop Curriculum | Vote</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
+                fontFamily: { sans: ['Inter', 'sans-serif'] },
                 extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
                     colors: {
-                        bg: {
-                            main: '#09090b',
-                            card: '#18181b',
-                            surface: '#27272a'
-                        },
-                        ae: {
-                            primary: '#7c7cff', /* Slightly softer purple */
-                            glow: 'rgba(124, 124, 255, 0.5)',
-                            accent: '#00D8A5'
-                        }
+                        bg: { main: '#050505', card: '#0f0f10', glass: 'rgba(20, 20, 23, 0.7)' },
+                        brand: { primary: '#6d28d9', secondary: '#00d8a5', glow: '#8b5cf6' }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
                     },
                     animation: {
-                        'enter': 'enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'scale-up': 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
-                        enter: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        scaleUp: {
-                            '0%': { transform: 'scale(0.8)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
-                        }
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -51,231 +38,208 @@
     </script>
 
     <style>
-        body {
-            background-color: #050505;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.08), transparent 25%), 
-                radial-gradient(circle at 85% 30%, rgba(0, 216, 165, 0.05), transparent 25%);
-            color: #e4e4e7;
+        body { background-color: #050505; color: #ffffff; }
+        
+        /* Subtle Background Glows */
+        .ambient-glow {
+            position: fixed; width: 600px; height: 600px; border-radius: 50%;
+            filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none;
         }
+        .glow-1 { top: -100px; left: -100px; background: #6d28d9; }
+        .glow-2 { bottom: -100px; right: -100px; background: #00d8a5; }
 
-        /* Glass effects */
+        /* Glassmorphism Utilities */
         .glass {
-            background: rgba(24, 24, 27, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-panel {
+            background: #0f0f10;
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .glass-panel {
-            background: rgba(24, 24, 27, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        /* Card Selection State */
+        .card-selected {
+            border-color: #6d28d9 !important;
+            background: rgba(109, 40, 217, 0.1) !important;
+            box-shadow: 0 0 30px rgba(109, 40, 217, 0.15);
+        }
+        
+        /* Rank Badge */
+        .rank-number {
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-        /* Card selection glow */
-        .topic-active {
-            border-color: #7c7cff !important;
-            background: rgba(124, 124, 255, 0.08) !important;
-            box-shadow: 0 0 20px rgba(124, 124, 255, 0.1);
-        }
-
-        /* Rank Number Badge */
-        .rank-number {
-            font-variant-numeric: tabular-nums;
-        }
-
+        /* Loader */
         .loader {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #3f3f46;
-            border-bottom-color: #7c7cff;
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
+            width: 20px; height: 20px; border: 2px solid #333;
+            border-bottom-color: #fff; border-radius: 50%;
+            display: inline-block; animation: rotation 1s linear infinite;
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-ae-primary selection:text-white pb-32">
+<body class="antialiased min-h-screen flex flex-col selection:bg-brand-primary selection:text-white pb-32">
 
-    <nav class="fixed top-0 w-full z-40 glass border-b-0 border-white/5">
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <header class="fixed top-0 w-full z-40 glass border-b-0 border-white/5">
         <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-900 to-black border border-ae-primary/30 flex items-center justify-center shadow-lg shadow-ae-primary/20">
-                    <span class="text-ae-primary font-bold text-xs tracking-tighter">Ae</span>
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-900 to-black border border-white/10 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <span class="text-indigo-400 font-bold text-xs tracking-wider">Ae</span>
                 </div>
-                <div class="flex flex-col leading-none">
-                    <span class="font-bold text-sm text-white tracking-wide">Workshop Planner</span>
-                    <span class="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">Curriculum Voting</span>
-                </div>
+                <h1 class="font-medium text-sm text-gray-300 tracking-tight">Workshop <span class="text-gray-600">Planner</span></h1>
             </div>
-            <div id="userInfo" class="text-[10px] font-mono text-zinc-600"></div>
+            <div id="userInfo" class="text-[10px] text-gray-600 font-mono"></div>
         </div>
-    </nav>
+    </header>
 
-    <main class="max-w-4xl mx-auto px-6 pt-28 flex-grow w-full space-y-16">
+    <main class="flex-grow max-w-4xl mx-auto w-full px-6 pt-24 space-y-16">
 
-        <div class="text-center space-y-4 animate-enter">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-500 tracking-tight">
-                Shape the Curriculum
-            </h1>
-            <p class="text-zinc-400 max-w-lg mx-auto text-sm md:text-base font-light">
-                Help tailor the upcoming After Effects workshop. Select your skill level and prioritize the topics that matter most to you.
-            </p>
+        <div class="text-center space-y-2 animate-fade-in">
+            <h2 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-500 tracking-tight">Curriculum Voting</h2>
+            <p class="text-gray-500 text-sm max-w-md mx-auto">Help shape the upcoming After Effects workshop. Select your skill level and vote for the topics that matter most to you.</p>
         </div>
 
-        <section id="introSection" class="space-y-6 animate-enter" style="animation-delay: 0.1s;">
-            <div class="flex items-center gap-3 text-sm font-semibold text-zinc-300">
-                <span class="bg-zinc-800 text-zinc-400 w-6 h-6 rounded flex items-center justify-center text-xs">1</span>
-                <span>Experience Level</span>
+        <section id="skillSection" class="space-y-6 animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="flex items-center gap-4 border-b border-white/5 pb-2">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white">1</span>
+                <h3 class="text-sm font-medium text-gray-400 uppercase tracking-widest">Experience Level</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-5 rounded-xl glass-panel text-left transition-all hover:bg-zinc-800/50 hover:border-zinc-600 focus:outline-none">
-                    <div class="absolute right-4 top-4 w-4 h-4 rounded-full border border-zinc-600 group-hover:border-ae-accent transition-colors check-circle flex items-center justify-center">
-                        <div class="w-2 h-2 rounded-full bg-ae-accent opacity-0 transition-opacity check-dot"></div>
+                <button onclick="selectSkill('Beginner')" class="skill-btn group relative h-32 glass-panel rounded-xl p-5 text-left transition-all duration-300 hover:bg-white/5 hover:border-white/20">
+                    <div class="absolute top-4 right-4 w-4 h-4 rounded-full border border-gray-600 group-hover:border-brand-secondary transition-colors check-circle"></div>
+                    <div class="h-full flex flex-col justify-end">
+                        <i class="fa-solid fa-seedling text-2xl text-gray-600 mb-3 group-hover:text-brand-secondary transition-colors"></i>
+                        <span class="block text-white font-semibold">Newcomer</span>
+                        <span class="text-xs text-gray-500">Brand new to Ae.</span>
                     </div>
-                    <div class="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-3 text-zinc-400 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-seedling"></i>
-                    </div>
-                    <h3 class="font-bold text-white mb-1">Newcomer</h3>
-                    <p class="text-xs text-zinc-500 leading-relaxed">I've rarely or never opened the software. Need the basics.</p>
                 </button>
 
-                <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-5 rounded-xl glass-panel text-left transition-all hover:bg-zinc-800/50 hover:border-zinc-600 focus:outline-none">
-                     <div class="absolute right-4 top-4 w-4 h-4 rounded-full border border-zinc-600 group-hover:border-ae-accent transition-colors check-circle flex items-center justify-center">
-                        <div class="w-2 h-2 rounded-full bg-ae-accent opacity-0 transition-opacity check-dot"></div>
+                <button onclick="selectSkill('Intermediate')" class="skill-btn group relative h-32 glass-panel rounded-xl p-5 text-left transition-all duration-300 hover:bg-white/5 hover:border-white/20">
+                    <div class="absolute top-4 right-4 w-4 h-4 rounded-full border border-gray-600 group-hover:border-brand-primary transition-colors check-circle"></div>
+                    <div class="h-full flex flex-col justify-end">
+                        <i class="fa-solid fa-layer-group text-2xl text-gray-600 mb-3 group-hover:text-brand-primary transition-colors"></i>
+                        <span class="block text-white font-semibold">Comfortable</span>
+                        <span class="text-xs text-gray-500">Knows layers & keyframes.</span>
                     </div>
-                    <div class="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-3 text-zinc-400 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </div>
-                    <h3 class="font-bold text-white mb-1">Comfortable</h3>
-                    <p class="text-xs text-zinc-500 leading-relaxed">I know keyframes, layers, and basic rendering.</p>
                 </button>
 
-                <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-5 rounded-xl glass-panel text-left transition-all hover:bg-zinc-800/50 hover:border-zinc-600 focus:outline-none">
-                     <div class="absolute right-4 top-4 w-4 h-4 rounded-full border border-zinc-600 group-hover:border-ae-accent transition-colors check-circle flex items-center justify-center">
-                        <div class="w-2 h-2 rounded-full bg-ae-accent opacity-0 transition-opacity check-dot"></div>
+                <button onclick="selectSkill('Advanced')" class="skill-btn group relative h-32 glass-panel rounded-xl p-5 text-left transition-all duration-300 hover:bg-white/5 hover:border-white/20">
+                    <div class="absolute top-4 right-4 w-4 h-4 rounded-full border border-gray-600 group-hover:border-rose-500 transition-colors check-circle"></div>
+                    <div class="h-full flex flex-col justify-end">
+                        <i class="fa-solid fa-wand-magic-sparkles text-2xl text-gray-600 mb-3 group-hover:text-rose-500 transition-colors"></i>
+                        <span class="block text-white font-semibold">Pro</span>
+                        <span class="text-xs text-gray-500">Expressions & Graph Editor.</span>
                     </div>
-                    <div class="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-3 text-zinc-400 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    </div>
-                    <h3 class="font-bold text-white mb-1">Pro</h3>
-                    <p class="text-xs text-zinc-500 leading-relaxed">I dream in graph editors and expressions.</p>
                 </button>
             </div>
-            <input type="hidden" id="selectedSkill" value="">
+            <input type="hidden" id="selectedSkill">
         </section>
 
-        <section id="votingSection" class="space-y-6 animate-enter" style="animation-delay: 0.2s;">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-3 text-sm font-semibold text-zinc-300">
-                    <span class="bg-zinc-800 text-zinc-400 w-6 h-6 rounded flex items-center justify-center text-xs">2</span>
-                    <span>Prioritize Topics</span>
-                    <span class="text-xs font-normal text-zinc-500 ml-2 border-l border-zinc-700 pl-3">Select in order of importance (#1, #2...)</span>
+        <section id="topicSection" class="space-y-6 opacity-30 pointer-events-none transition-all duration-500 blur-sm">
+            <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white">2</span>
+                    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-widest">Select Priorities</h3>
                 </div>
-
-                <button onclick="toggleNewTopicForm()" class="text-xs font-medium text-ae-primary hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-ae-primary/10 border border-transparent hover:border-ae-primary/20">
+                <button onclick="toggleNewTopic()" class="text-xs text-brand-primary hover:text-white transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Suggest Topic
                 </button>
             </div>
 
-            <div id="newTopicForm" class="hidden glass p-4 rounded-xl border border-ae-primary/30 animate-scale-up">
-                <div class="flex gap-3">
-                    <input type="text" id="newTopicInput" placeholder="What topic is missing?" class="flex-grow bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-ae-primary focus:ring-1 focus:ring-ae-primary placeholder-zinc-600">
-                    <button onclick="submitNewTopic()" class="bg-ae-primary text-black font-bold px-5 py-2 rounded-lg text-sm hover:bg-white transition-colors">Add</button>
-                </div>
+            <div id="newTopicForm" class="hidden animate-fade-in mb-4 p-1 rounded-lg bg-white/5 border border-white/10 flex">
+                <input type="text" id="newTopicInput" placeholder="Topic name (e.g. 3D Tracking)" class="bg-transparent border-none text-sm text-white px-4 py-2 w-full focus:outline-none placeholder-gray-600">
+                <button onclick="submitNewTopic()" class="bg-white/10 hover:bg-brand-primary text-white px-4 rounded-md text-xs font-bold transition-colors">Add</button>
             </div>
 
-            <div id="topicsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                <div class="col-span-full py-12 text-center">
-                    <span class="loader"></span>
+            <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="col-span-full py-12 text-center text-gray-600">
+                    <div class="loader mb-2"></div>
+                    <p class="text-xs">Loading curriculum...</p>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <div id="stickyFooter" class="fixed bottom-8 left-0 right-0 z-50 pointer-events-none transform translate-y-32 transition-transform duration-500 ease-out">
-        <div class="max-w-md mx-auto pointer-events-auto">
-            <div class="glass rounded-2xl p-2 mx-4 shadow-2xl shadow-black flex items-center justify-between pl-5">
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Your Picks</span>
-                    <div class="flex items-baseline gap-1">
-                        <span id="selectionCount" class="text-xl font-bold text-white">0</span>
-                        <span class="text-xs text-zinc-400">Topics</span>
-                    </div>
-                </div>
-
-                <div class="flex gap-2">
-                    <button onclick="resetSelection()" class="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors" title="Reset Selection">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </button>
-                    <button id="submitBtn" onclick="submitVotes()" class="bg-white hover:bg-ae-primary text-black font-bold px-6 py-2 rounded-xl text-sm transition-all shadow-lg hover:shadow-ae-primary/50 flex items-center gap-2">
-                        <span>Submit</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
+    <div id="stickyFooter" class="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none transform translate-y-32 transition-transform duration-500">
+        <div class="glass pl-5 pr-2 py-2 rounded-full shadow-2xl shadow-black flex items-center gap-6 pointer-events-auto border border-white/10">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Your Picks</span>
+                <span class="text-sm font-medium text-white"><span id="selectionCount" class="text-brand-primary">0</span> Selected</span>
             </div>
+            
+            <button onclick="submitVotes()" id="submitBtn" class="bg-white text-black hover:bg-gray-200 px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2">
+                <span>Submit</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
         </div>
     </div>
 
-    <div id="successMessage" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-6">
-        <div class="max-w-sm w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center animate-scale-up shadow-2xl">
-            <div class="w-16 h-16 bg-ae-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 text-ae-accent text-2xl border border-ae-accent/20">
+    <div id="successMessage" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
+        <div class="bg-[#0f0f10] border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
+            <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
                 <i class="fa-solid fa-check"></i>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">Recorded!</h2>
-            <p class="text-zinc-400 text-sm mb-8">Thanks for helping shape the workshop. We'll crunch the numbers and announce the curriculum soon.</p>
-            <button onclick="location.reload()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-xl transition-colors border border-zinc-700">Back to Start</button>
+            <h3 class="text-xl font-bold text-white mb-2">Votes Recorded</h3>
+            <p class="text-gray-400 text-sm mb-6">Thanks for your input. The workshop curriculum will be tailored to these results.</p>
+            <button onclick="location.reload()" class="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-lg text-sm font-medium transition-colors border border-white/5">Close</button>
         </div>
     </div>
 
-    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#050505] overflow-auto">
+    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#050505] overflow-y-auto">
         <div class="max-w-6xl mx-auto p-6 md:p-12">
-            <header class="flex justify-between items-center mb-12 border-b border-zinc-800 pb-6">
+            <div class="flex justify-between items-center mb-12">
                 <div>
                     <h1 class="text-2xl font-bold text-white">Admin Dashboard</h1>
-                    <p class="text-zinc-500 text-sm mt-1">Live Results & Configuration</p>
+                    <p class="text-gray-500 text-sm">Results & Content Management</p>
                 </div>
-                <button onclick="closeAdmin()" class="w-10 h-10 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 flex items-center justify-center transition-colors">
+                <button onclick="closeAdmin()" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
-            </header>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h3 class="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-6">Audience Level</h3>
-                    <div class="relative h-48">
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Audience Level</h3>
+                    <div class="h-48 relative">
                         <canvas id="skillChart"></canvas>
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl">
-                    <h3 class="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-6">Topic Demand (Weighted Score)</h3>
-                    <div class="overflow-hidden rounded-lg border border-zinc-800">
+                <div class="lg:col-span-2 glass-panel p-6 rounded-xl">
+                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Topic Ranking (Weighted)</h3>
+                    <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-zinc-900/50 text-zinc-500 text-xs uppercase">
+                            <thead class="text-xs text-gray-500 border-b border-white/5">
                                 <tr>
-                                    <th class="px-4 py-3 font-medium">Topic</th>
-                                    <th class="px-4 py-3 text-right font-medium">Score</th>
-                                    <th class="px-4 py-3 font-medium w-1/3">Popularity</th>
+                                    <th class="pb-3 font-normal">Topic</th>
+                                    <th class="pb-3 text-right font-normal">Score</th>
+                                    <th class="pb-3 pl-4 w-1/3 font-normal">Interest</th>
                                 </tr>
                             </thead>
-                            <tbody id="adminTableBody" class="divide-y divide-zinc-800"></tbody>
+                            <tbody id="adminTableBody" class="divide-y divide-white/5 text-gray-300">
+                                </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="col-span-1 lg:col-span-3 glass-panel p-6 rounded-2xl mt-4">
-                    <h3 class="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-6">Content Management</h3>
+                <div class="lg:col-span-3 glass-panel p-6 rounded-xl mt-6">
+                    <h3 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Content Management</h3>
                     <div id="adminTopicsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         </div>
                 </div>
@@ -283,14 +247,15 @@
         </div>
     </div>
 
-    <footer class="text-center py-8">
-        <button onclick="openAdmin()" class="text-[10px] text-zinc-800 hover:text-zinc-600 transition-colors">Admin Access</button>
+    <footer class="py-8 text-center">
+        <p class="text-[10px] text-gray-800 cursor-pointer hover:text-gray-700 transition-colors" onclick="openAdmin()">Admin Access</p>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyC6gjDkHHsh9ru3PFHJVJAZpGIvQWja96o",
             authDomain: "aftereffectsworkshop-ab75f.firebaseapp.com",
@@ -305,48 +270,34 @@
 
         // State
         let topics = [];
-        let selectedTopicIds = []; 
+        let selectedTopicIds = [];
         let skillLevel = null;
         const userId = localStorage.getItem('ae_voter_id') || 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('ae_voter_id', userId);
-        document.getElementById('userInfo').innerText = `ID: ${userId.substr(-4)}`;
 
         const defaultTopics = [
-            "UI Animation Basics", "Masking & Rotoscoping", "3D Camera & Tracking",
-            "Text Animators", "Lottie / Bodymovin Export", "Expressions for UI",
-            "Graph Editor Mastery", "Green Screen Keying", "Character Rigging (Duik)",
+            "UI Animation Basics", "Masking & Rotoscoping", "3D Camera & Tracking", 
+            "Text Animators", "Lottie / Bodymovin", "Expressions for UI", 
+            "Graph Editor Mastery", "Green Screen Keying", "Character Rigging", 
             "Data Visualization", "Shortcuts & Workflow", "Particle Effects"
         ];
 
-        // --- Core ---
-
+        // --- Initialization ---
         async function init() {
             const q = collection(db, "topics");
             onSnapshot(q, (snapshot) => {
-                const fetchedTopics = [];
-                snapshot.forEach((doc) => {
-                    fetchedTopics.push({ id: doc.id, ...doc.data() });
-                });
+                const fetched = [];
+                snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
                 
-                if (fetchedTopics.length === 0) {
-                    seedDefaults();
-                } else {
-                    topics = fetchedTopics.sort((a, b) => {
-                        const orderA = typeof a.order === 'number' ? a.order : 9999;
-                        const orderB = typeof b.order === 'number' ? b.order : 9999;
-                        if (orderA !== orderB) return orderA - orderB;
-                        return a.title.localeCompare(b.title);
-                    });
+                if (fetched.length === 0) seedDefaults();
+                else {
+                    topics = fetched.sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
                     renderTopics();
-                    renderManageTopics(); 
-                }
-                
-                if(!document.getElementById('adminPanel').classList.contains('hidden')){
-                    calculateResults();
+                    renderManageTopics();
+                    if(!document.getElementById('adminPanel').classList.contains('hidden')) calculateResults();
                 }
             });
 
-            // Check for admin param
             if(new URLSearchParams(window.location.search).get('admin') === 'true') openAdmin();
         }
 
@@ -357,7 +308,7 @@
             }
         }
 
-        // Render Topics Grid
+        // --- Render UI ---
         function renderTopics() {
             const container = document.getElementById('topicsContainer');
             container.innerHTML = '';
@@ -366,142 +317,107 @@
                 const rankIndex = selectedTopicIds.indexOf(topic.id);
                 const isSelected = rankIndex !== -1;
                 const rank = rankIndex + 1;
+                
+                // Color Logic based on rank
+                let ringColor = 'border-white/10';
+                let textColor = 'text-gray-400';
+                if(isSelected) {
+                    ringColor = 'border-brand-primary';
+                    textColor = 'text-white';
+                }
 
                 const card = document.createElement('div');
-                // Styles: Default vs Selected
-                const baseClasses = "relative h-28 p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/80 cursor-pointer transition-all duration-200 select-none group overflow-hidden";
-                const activeClasses = "topic-active";
-
-                card.className = `${baseClasses} ${isSelected ? activeClasses : ''}`;
-                card.onclick = () => toggleTopicSelection(topic.id);
-
-                // Rank Badge Logic (Large Number background)
-                const rankDisplay = isSelected 
-                    ? `<div class="absolute -right-2 -bottom-4 text-7xl font-bold text-ae-primary opacity-20 pointer-events-none rank-number animate-scale-up">${rank}</div>`
-                    : `<div class="absolute top-3 right-3 w-5 h-5 rounded-full border border-zinc-700 group-hover:border-zinc-500 transition-colors"></div>`;
+                // Glass Card styling
+                card.className = `group relative h-20 rounded-lg border ${isSelected ? 'card-selected' : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'} cursor-pointer transition-all duration-200 select-none flex items-center px-4`;
+                
+                card.onclick = () => toggleTopic(topic.id);
 
                 card.innerHTML = `
-                    ${rankDisplay}
-                    <span class="relative z-10 text-sm font-medium ${isSelected ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'} transition-colors leading-tight block pr-4">
-                        ${topic.title}
-                    </span>
-                    ${isSelected ? `<div class="absolute top-3 right-3 w-5 h-5 bg-ae-primary rounded-full flex items-center justify-center text-[10px] text-black font-bold shadow-lg shadow-ae-primary/50 animate-scale-up"><i class="fa-solid fa-check"></i></div>` : ''}
+                    <div class="flex-grow">
+                        <span class="text-sm font-medium ${textColor} transition-colors">${topic.title}</span>
+                    </div>
+                    ${isSelected ? `
+                        <div class="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs font-bold shadow-lg rank-number animate-fade-in">
+                            ${rank}
+                        </div>
+                    ` : `
+                        <div class="w-4 h-4 rounded-full border border-gray-600 opacity-20 group-hover:opacity-100 transition-opacity"></div>
+                    `}
                 `;
                 container.appendChild(card);
             });
-            
             updateFooter();
         }
 
-        window.toggleTopicSelection = (topicId) => {
-            const index = selectedTopicIds.indexOf(topicId);
-            if (index !== -1) {
-                selectedTopicIds.splice(index, 1);
-            } else {
-                selectedTopicIds.push(topicId);
-            }
-            renderTopics(); 
-        };
-
-        window.resetSelection = () => {
-            selectedTopicIds = [];
-            renderTopics();
-        }
-
-        function updateFooter() {
-            const footer = document.getElementById('stickyFooter');
-            const countEl = document.getElementById('selectionCount');
-            const count = selectedTopicIds.length;
-            
-            countEl.textContent = count;
-            
-            // Show footer if user has interacted
-            if (count > 0 || skillLevel) {
-                footer.classList.remove('translate-y-32');
-            } else {
-                footer.classList.add('translate-y-32');
-            }
-        }
-
-        // Skill Logic
+        // --- Interactions ---
         window.selectSkill = (level) => {
             skillLevel = level;
             document.getElementById('selectedSkill').value = level;
             
-            const btns = document.querySelectorAll('.skill-btn');
-            btns.forEach(btn => {
-                // Reset styles
-                const dot = btn.querySelector('.check-dot');
-                const circle = btn.querySelector('.check-circle');
-                
-                dot.classList.remove('opacity-100');
-                dot.classList.add('opacity-0');
-                
-                circle.classList.remove('border-ae-accent');
-                circle.classList.add('border-zinc-600');
-                
-                btn.classList.remove('bg-zinc-800', 'border-zinc-500');
+            // Visual feedback
+            document.querySelectorAll('.skill-btn').forEach(btn => {
+                btn.classList.remove('card-selected');
+                btn.querySelector('.check-circle').classList.remove('bg-white', 'border-transparent');
             });
 
-            // Set Active
-            const targetBtn = Array.from(btns).find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Comfortable' : 'Pro'));
+            const targetBtn = Array.from(document.querySelectorAll('.skill-btn'))
+                .find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Comfortable' : 'Pro'));
+            
             if(targetBtn) {
-                const dot = targetBtn.querySelector('.check-dot');
+                targetBtn.classList.add('card-selected');
                 const circle = targetBtn.querySelector('.check-circle');
-                
-                dot.classList.remove('opacity-0');
-                dot.classList.add('opacity-100');
-                
-                circle.classList.remove('border-zinc-600');
-                circle.classList.add('border-ae-accent');
-
-                targetBtn.classList.add('bg-zinc-800', 'border-zinc-500');
+                circle.classList.add('bg-white', 'border-transparent');
             }
 
-            // Smooth scroll to next section
-            document.getElementById('votingSection').scrollIntoView({behavior: 'smooth', block: 'center'});
-            updateFooter();
-        }
-
-        // Add New Topic
-        window.toggleNewTopicForm = () => {
-            document.getElementById('newTopicForm').classList.toggle('hidden');
+            // Reveal Grid
+            const section = document.getElementById('topicSection');
+            section.classList.remove('opacity-30', 'pointer-events-none', 'blur-sm');
+            section.scrollIntoView({behavior: 'smooth', block: 'center'});
         };
 
+        window.toggleTopic = (id) => {
+            const index = selectedTopicIds.indexOf(id);
+            if(index !== -1) selectedTopicIds.splice(index, 1); // Remove
+            else selectedTopicIds.push(id); // Add
+            renderTopics();
+        };
+
+        function updateFooter() {
+            const count = selectedTopicIds.length;
+            document.getElementById('selectionCount').textContent = count;
+            const footer = document.getElementById('stickyFooter');
+            
+            // Logic: Show footer if skill selected OR items picked
+            if(skillLevel || count > 0) footer.classList.remove('translate-y-32');
+        }
+
+        // --- Data Handling ---
+        window.toggleNewTopic = () => document.getElementById('newTopicForm').classList.toggle('hidden');
+        
         window.submitNewTopic = async () => {
             const input = document.getElementById('newTopicInput');
             const title = input.value.trim();
             if (!title) return;
-
-            try {
-                const maxOrder = topics.reduce((max, t) => Math.max(max, typeof t.order === 'number' ? t.order : -1), -1);
-                await addDoc(collection(db, "topics"), {
-                    title: title, order: maxOrder + 1, createdAt: serverTimestamp(), createdBy: userId
-                });
-                input.value = '';
-                toggleNewTopicForm();
-            } catch (e) { console.error(e); }
+            const maxOrder = topics.reduce((max, t) => Math.max(max, t.order ?? -1), -1);
+            await addDoc(collection(db, "topics"), { title, order: maxOrder + 1, createdAt: serverTimestamp(), createdBy: userId });
+            input.value = '';
+            toggleNewTopic();
         };
 
-        // Submit
         window.submitVotes = async () => {
-            const btn = document.getElementById('submitBtn');
-            if (selectedTopicIds.length === 0) return alert("Select at least one topic.");
-            if (!skillLevel) {
-                alert("Please select your experience level.");
-                return document.getElementById('introSection').scrollIntoView({behavior: 'smooth'});
-            }
+            if (!skillLevel) { alert("Please select your experience level first."); window.scrollTo({top:0, behavior:'smooth'}); return; }
+            if (selectedTopicIds.length === 0) { alert("Please select at least one topic."); return; }
 
+            const btn = document.getElementById('submitBtn');
             const originalContent = btn.innerHTML;
-            btn.innerHTML = '<span class="loader w-4 h-4 border-black border-b-transparent"></span>';
+            btn.innerHTML = '<div class="loader w-4 h-4 border-gray-600 border-b-black"></div>';
             
             try {
                 await addDoc(collection(db, "votes"), {
-                    userId: userId, skillLevel: skillLevel, selectedTopics: selectedTopicIds, submittedAt: serverTimestamp()
+                    userId, skillLevel, selectedTopics: selectedTopicIds, submittedAt: serverTimestamp()
                 });
-                
                 document.getElementById('successMessage').classList.remove('hidden');
-                document.getElementById('stickyFooter').classList.add('translate-y-32'); 
+                document.getElementById('stickyFooter').classList.add('translate-y-32');
             } catch (e) {
                 console.error(e);
                 alert("Error submitting.");
@@ -509,18 +425,14 @@
             }
         };
 
-
-        // --- Admin ---
-        
+        // --- Admin Functions ---
         window.openAdmin = () => {
-            const pwd = prompt("Admin Password:");
-            if (pwd !== "123") return alert("Incorrect.");
+            if(prompt("Password:") !== "123") return;
             document.getElementById('adminPanel').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             calculateResults();
             renderManageTopics();
         };
-        
         window.closeAdmin = () => {
             document.getElementById('adminPanel').classList.add('hidden');
             document.body.style.overflow = 'auto';
@@ -529,96 +441,89 @@
         function renderManageTopics() {
             const list = document.getElementById('adminTopicsList');
             if(!list) return;
-
-            list.innerHTML = topics.map((t, index) => `
-                <div class="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800 flex items-center gap-2 group hover:border-zinc-600 transition-colors">
-                    <div class="flex flex-col gap-0.5 mr-1">
-                        <button onclick="moveTopic(${index}, -1)" class="text-zinc-600 hover:text-white text-[10px] ${index === 0 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-up"></i></button>
-                        <button onclick="moveTopic(${index}, 1)" class="text-zinc-600 hover:text-white text-[10px] ${index === topics.length - 1 ? 'invisible' : ''}"><i class="fa-solid fa-chevron-down"></i></button>
+            list.innerHTML = topics.map((t, idx) => `
+                <div class="flex items-center gap-2 bg-white/5 p-2 rounded border border-white/10 group">
+                    <div class="flex flex-col">
+                        <button onclick="moveTopic(${idx},-1)" class="text-[10px] text-gray-500 hover:text-white ${idx===0?'invisible':''}"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="moveTopic(${idx},1)" class="text-[10px] text-gray-500 hover:text-white ${idx===topics.length-1?'invisible':''}"><i class="fa-solid fa-chevron-down"></i></button>
                     </div>
-                    <input type="text" value="${t.title}" id="edit-input-${t.id}" 
-                        class="bg-transparent border-none focus:outline-none focus:text-ae-primary text-zinc-300 flex-grow text-xs font-medium placeholder-zinc-700" placeholder="Name">
-                    <button onclick="updateTopicName('${t.id}')" class="text-zinc-600 hover:text-ae-accent p-2 rounded"><i class="fa-solid fa-floppy-disk"></i></button>
-                    <button onclick="deleteTopic('${t.id}')" class="text-zinc-600 hover:text-red-500 p-2 rounded"><i class="fa-solid fa-trash"></i></button>
+                    <input id="edit-${t.id}" value="${t.title}" class="bg-transparent text-xs text-gray-300 w-full focus:outline-none">
+                    <button onclick="updateTopicName('${t.id}')" class="text-gray-500 hover:text-brand-primary p-2"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button onclick="deleteTopic('${t.id}')" class="text-gray-500 hover:text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
-        // Admin Helpers attached to window
+        // Attach global helpers for module scope
         window.moveTopic = async (idx, dir) => {
-            const targetIdx = idx + dir;
-            if (targetIdx < 0 || targetIdx >= topics.length) return;
-            const tA = topics[idx], tB = topics[targetIdx];
-            // Swap orders
-            await updateDoc(doc(db, "topics", tA.id), { order: typeof tB.order === 'number' ? tB.order : targetIdx });
-            await updateDoc(doc(db, "topics", tB.id), { order: typeof tA.order === 'number' ? tA.order : idx });
+            const t1 = topics[idx], t2 = topics[idx+dir];
+            await updateDoc(doc(db, "topics", t1.id), { order: t2.order ?? idx+dir });
+            await updateDoc(doc(db, "topics", t2.id), { order: t1.order ?? idx });
         };
         window.updateTopicName = async (id) => {
-            const val = document.getElementById(`edit-input-${id}`).value.trim();
+            const val = document.getElementById(`edit-${id}`).value;
             if(val) await updateDoc(doc(db, "topics", id), { title: val });
         };
-        window.deleteTopic = async (id) => {
-            if(confirm("Delete?")) await deleteDoc(doc(db, "topics", id));
-        };
+        window.deleteTopic = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "topics", id)); };
 
-        // Charts & Stats
         async function calculateResults() {
-            const votesSnap = await getDocs(collection(db, "votes"));
-            const allVotes = [];
-            votesSnap.forEach(doc => allVotes.push(doc.data()));
-
-            const scores = {}; 
+            const snap = await getDocs(collection(db, "votes"));
+            const scores = {};
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
 
-            allVotes.forEach(v => {
-                if (v.selectedTopics && Array.isArray(v.selectedTopics)) {
-                    v.selectedTopics.forEach((topicId, index) => {
-                        if (!scores[topicId]) scores[topicId] = { score: 0, title: topicMap[topicId] || 'Unknown' };
-                        let points = 1;
-                        if(index === 0) points = 3; else if(index === 1) points = 2;
-                        scores[topicId].score += points;
+            const skills = { Beginner:0, Intermediate:0, Advanced:0 };
+
+            snap.forEach(doc => {
+                const v = doc.data();
+                if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
+                
+                // Scoring
+                if(v.selectedTopics && Array.isArray(v.selectedTopics)) {
+                    v.selectedTopics.forEach((tid, idx) => {
+                        if(!scores[tid]) scores[tid] = { score:0, title: topicMap[tid] || 'Unknown' };
+                        // Weighting: 1st=3pts, 2nd=2pts, Rest=1pt
+                        scores[tid].score += (idx === 0 ? 3 : idx === 1 ? 2 : 1);
                     });
+                } else if (v.vote1) { // Legacy support
+                    if(v.vote1) { if(!scores[v.vote1]) scores[v.vote1]={score:0,title:topicMap[v.vote1]}; scores[v.vote1].score+=3; }
+                    if(v.vote2) { if(!scores[v.vote2]) scores[v.vote2]={score:0,title:topicMap[v.vote2]}; scores[v.vote2].score+=2; }
+                    if(v.vote3) { if(!scores[v.vote3]) scores[v.vote3]={score:0,title:topicMap[v.vote3]}; scores[v.vote3].score+=1; }
                 }
             });
 
-            const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
-            const maxScore = sortedTopics.length > 0 ? sortedTopics[0].score : 1;
-
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = sortedTopics.map(t => {
-                const width = (t.score / maxScore) * 100;
-                return `
-                <tr class="hover:bg-zinc-800/50 transition-colors">
-                    <td class="px-4 py-3 text-zinc-300 font-medium">${t.title}</td>
-                    <td class="px-4 py-3 text-right text-ae-primary font-bold">${t.score}</td>
-                    <td class="px-4 py-3">
-                        <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-ae-primary shadow-[0_0_10px_rgba(124,124,255,0.5)]" style="width: ${width}%"></div>
+            // Table
+            const sorted = Object.values(scores).sort((a,b) => b.score - a.score);
+            const max = sorted[0]?.score || 1;
+            document.getElementById('adminTableBody').innerHTML = sorted.map(t => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="py-2 pr-4 text-xs font-medium">${t.title}</td>
+                    <td class="py-2 pr-4 text-right text-brand-primary font-bold">${t.score}</td>
+                    <td class="py-2 pl-4">
+                        <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-primary" style="width:${(t.score/max)*100}%"></div>
                         </div>
                     </td>
                 </tr>
-            `}).join('');
+            `).join('');
 
             // Chart
-            const skills = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
-            allVotes.forEach(v => { if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++; });
-            
-            const ctx = document.getElementById('skillChart').getContext('2d');
             if(window.myChart) window.myChart.destroy();
-            window.myChart = new Chart(ctx, {
+            window.myChart = new Chart(document.getElementById('skillChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Newcomer', 'Comfortable', 'Pro'],
+                    labels: ['New', 'Mid', 'Pro'],
                     datasets: [{
                         data: [skills.Beginner, skills.Intermediate, skills.Advanced],
-                        backgroundColor: ['#00D8A5', '#7c7cff', '#e11d48'],
-                        borderColor: '#18181b', borderWidth: 0
+                        backgroundColor: ['#4ade80', '#8b5cf6', '#f43f5e'],
+                        borderColor: '#0f0f10',
+                        borderWidth: 4
                     }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right', labels: { color: '#a1a1aa', font: { family: 'Outfit', size: 11 }, boxWidth: 10 } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'right', labels: { color: '#9ca3af', font: {size:10, family:'Inter'} } } } 
                 }
             });
         }
