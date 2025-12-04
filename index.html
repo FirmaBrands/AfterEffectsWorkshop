@@ -27,12 +27,27 @@
                             panel: '#232323',
                             light: '#cfcfcf',
                             purple: '#9999FF',
-                            accent: '#00D8A5',
-                            hover: '#3a3a3a'
+                            accent: '#00D8A5', // Teal/Green accent
+                            hover: '#3a3a3a',
+                            selected: '#3d3d5c' // Dark purple tint
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slight': 'bounce-slight 0.3s ease-in-out',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        'bounce-slight': {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(0.97)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
@@ -43,6 +58,7 @@
         body {
             background-color: #121212;
             color: #e0e0e0;
+            padding-bottom: 80px; /* Space for sticky footer */
         }
         
         /* AE-like scrollbar */
@@ -61,15 +77,23 @@
         }
 
         .topic-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Selected State for Topic Card */
+        .topic-selected {
+            border-color: #9999FF !important;
+            background-color: rgba(153, 153, 255, 0.1) !important;
+            box-shadow: 0 0 15px rgba(153, 153, 255, 0.15);
+        }
+        .topic-selected .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .check-icon {
+            opacity: 0;
+            transform: scale(0.5);
             transition: all 0.2s ease;
-        }
-        .topic-card:active {
-            transform: scale(0.98);
-        }
-
-        .slot-active {
-            border-color: #9999FF;
-            box-shadow: 0 0 15px rgba(153, 153, 255, 0.2);
         }
 
         /* Loaders */
@@ -87,7 +111,7 @@
 <body class="min-h-screen flex flex-col font-sans text-sm selection:bg-ae-purple selection:text-black">
 
     <!-- Header -->
-    <header class="bg-ae-dark border-b border-gray-800 p-4 sticky top-0 z-50 shadow-lg">
+    <header class="bg-ae-dark border-b border-gray-800 p-4 sticky top-0 z-40 shadow-lg">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-[#00005b] rounded-md flex items-center justify-center border border-ae-purple shadow-[0_0_10px_rgba(153,153,255,0.3)]">
@@ -95,7 +119,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg tracking-wide text-white">Workshop Planner</h1>
-                    <p class="text-xs text-gray-400">Vote for what you want to learn</p>
+                    <p class="text-xs text-gray-400">Curriculum Voting</p>
                 </div>
             </div>
             <div id="userInfo" class="text-xs text-gray-500"></div>
@@ -103,127 +127,109 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow p-4 md:p-8">
-        <div class="max-w-5xl mx-auto space-y-12">
+    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full space-y-12">
 
-            <!-- Section 1: Introduction & Skill Level -->
-            <section id="introSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl">
-                <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                    <span class="text-ae-purple mr-2">01.</span> Your Experience
-                </h2>
-                <p class="text-gray-400 mb-6">Before we dive into topics, how comfortable are you with After Effects right now?</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-white group-hover:text-ae-accent">Newcomer</span>
-                            <i class="fa-solid fa-seedling text-gray-600 group-hover:text-ae-accent"></i>
-                        </div>
-                        <p class="text-xs text-gray-500">I've never opened it or only know the very basics.</p>
-                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                    </button>
-
-                    <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-white group-hover:text-ae-accent">Comfortable</span>
-                            <i class="fa-solid fa-layer-group text-gray-600 group-hover:text-ae-accent"></i>
-                        </div>
-                        <p class="text-xs text-gray-500">I know keyframes, layers, and basic rendering.</p>
-                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                    </button>
-
-                    <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-white group-hover:text-ae-accent">Pro</span>
-                            <i class="fa-solid fa-wand-magic-sparkles text-gray-600 group-hover:text-ae-accent"></i>
-                        </div>
-                        <p class="text-xs text-gray-500">I dream in expressions and graph editors.</p>
-                        <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
-                    </button>
-                </div>
-                <input type="hidden" id="selectedSkill" value="">
-            </section>
-
-            <!-- Section 2: Voting -->
-            <section id="votingSection" class="relative">
-                <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2 flex justify-between items-end">
-                    <span><span class="text-ae-purple mr-2">02.</span> Select Your Interests</span>
-                    <span class="text-xs font-normal text-gray-400">Click a topic to add it to your slots</span>
-                </h2>
-
-                <!-- Sticky Slots (Mobile friendly) -->
-                <div class="sticky top-20 z-40 bg-ae-dark/95 backdrop-blur border border-gray-700 p-4 rounded-lg shadow-2xl mb-8">
-                    <div class="grid grid-cols-3 gap-2 md:gap-4">
-                        <!-- Slot 1 -->
-                        <div id="slot-1" onclick="clearSlot(1)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
-                            <div class="text-ae-purple font-bold text-xs md:text-sm uppercase tracking-widest mb-1">1st Choice</div>
-                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
-                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
-                            <div class="hidden absolute -top-3 -right-3 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Gold</div>
-                        </div>
-                        <!-- Slot 2 -->
-                        <div id="slot-2" onclick="clearSlot(2)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
-                            <div class="text-gray-300 font-bold text-xs md:text-sm uppercase tracking-widest mb-1">2nd Choice</div>
-                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
-                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
-                        </div>
-                        <!-- Slot 3 -->
-                        <div id="slot-3" onclick="clearSlot(3)" class="cursor-pointer relative group bg-ae-panel border-2 border-dashed border-gray-600 rounded h-24 md:h-28 flex flex-col items-center justify-center text-center p-2 hover:bg-gray-800 transition-colors">
-                            <div class="text-yellow-700 font-bold text-xs md:text-sm uppercase tracking-widest mb-1">3rd Choice</div>
-                            <div class="slot-content text-xs text-gray-400 line-clamp-2">Select a topic...</div>
-                            <i class="fa-solid fa-xmark absolute top-1 right-2 text-gray-500 opacity-0 group-hover:opacity-100"></i>
-                        </div>
+        <!-- Section 1: Introduction & Skill Level -->
+        <section id="introSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl animate-fade-in-up" style="animation-delay: 0.1s;">
+            <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
+                <span class="text-ae-purple mr-2">01.</span> Your Experience
+            </h2>
+            <p class="text-gray-400 mb-6">Before we dive into topics, how comfortable are you with After Effects?</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white group-hover:text-ae-accent">Newcomer</span>
+                        <i class="fa-solid fa-seedling text-gray-600 group-hover:text-ae-accent"></i>
                     </div>
-                </div>
-
-                <!-- Topic Grid -->
-                <div class="mb-6 flex justify-between items-center">
-                    <h3 class="text-gray-400 text-sm">Available Topics</h3>
-                    <button onclick="toggleNewTopicForm()" class="text-xs bg-ae-panel hover:bg-gray-700 border border-gray-600 px-3 py-1.5 rounded transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Suggest New
-                    </button>
-                </div>
-
-                <!-- New Topic Form (Hidden) -->
-                <div id="newTopicForm" class="hidden mb-6 bg-ae-panel border border-ae-purple p-4 rounded relative animate-fade-in">
-                    <h4 class="text-white text-sm font-bold mb-2">Suggest a Topic</h4>
-                    <div class="flex gap-2">
-                        <input type="text" id="newTopicInput" placeholder="e.g. 3D Camera Tracking..." class="flex-grow bg-ae-dark border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-ae-purple text-sm">
-                        <button onclick="submitNewTopic()" class="bg-ae-purple text-black font-bold px-4 py-2 rounded text-sm hover:bg-white transition-colors">Add</button>
-                    </div>
-                </div>
-
-                <!-- Topics Container -->
-                <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    <!-- Topics will be injected here via JS -->
-                    <div class="flex items-center justify-center h-32">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Submit Section -->
-            <section class="flex justify-center pb-12">
-                <button id="submitBtn" onclick="submitVotes()" disabled class="bg-gray-700 text-gray-400 cursor-not-allowed px-8 py-3 rounded font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center gap-3">
-                    <span>Submit Votes</span>
-                    <i class="fa-solid fa-paper-plane"></i>
+                    <p class="text-xs text-gray-500">I've never opened it or only know the very basics.</p>
+                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
                 </button>
-            </section>
 
-            <!-- Thank You / Success Message (Hidden) -->
-            <div id="successMessage" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div class="bg-ae-panel p-8 rounded-lg border border-ae-accent shadow-2xl max-w-md text-center">
-                    <div class="w-16 h-16 bg-ae-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-check text-2xl text-ae-accent"></i>
+                <button onclick="selectSkill('Intermediate')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white group-hover:text-ae-accent">Comfortable</span>
+                        <i class="fa-solid fa-layer-group text-gray-600 group-hover:text-ae-accent"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Votes Saved!</h2>
-                    <p class="text-gray-400 mb-6">Thanks for helping shape the workshop.</p>
-                    <button onclick="location.reload()" class="bg-ae-accent text-black font-bold px-6 py-2 rounded hover:bg-white transition-colors">Back</button>
+                    <p class="text-xs text-gray-500">I know keyframes, layers, and basic rendering.</p>
+                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                </button>
+
+                <button onclick="selectSkill('Advanced')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white group-hover:text-ae-accent">Pro</span>
+                        <i class="fa-solid fa-wand-magic-sparkles text-gray-600 group-hover:text-ae-accent"></i>
+                    </div>
+                    <p class="text-xs text-gray-500">I dream in expressions and graph editors.</p>
+                    <div class="absolute inset-0 border-2 border-ae-accent rounded opacity-0 scale-95 transition-all pointer-events-none check-ring"></div>
+                </button>
+            </div>
+            <input type="hidden" id="selectedSkill" value="">
+        </section>
+
+        <!-- Section 2: Voting -->
+        <section id="votingSection" class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
+            <h2 class="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2 flex flex-wrap justify-between items-end gap-2">
+                <span><span class="text-ae-purple mr-2">02.</span> What do you want to learn?</span>
+                <span class="text-xs font-normal text-gray-400 bg-gray-800 px-2 py-1 rounded">Select all that apply</span>
+            </h2>
+
+            <!-- Topic Grid -->
+            <div class="mb-6 flex justify-between items-center">
+                <h3 class="text-gray-400 text-sm">Available Topics</h3>
+                <button onclick="toggleNewTopicForm()" class="text-xs text-ae-purple hover:text-white border border-ae-purple hover:bg-ae-purple hover:bg-opacity-20 px-3 py-1.5 rounded transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Suggest New
+                </button>
+            </div>
+
+            <!-- New Topic Form (Hidden) -->
+            <div id="newTopicForm" class="hidden mb-6 bg-ae-panel border border-ae-purple p-4 rounded relative animate-fade-in shadow-lg">
+                <h4 class="text-white text-sm font-bold mb-2">Suggest a Topic</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="newTopicInput" placeholder="e.g. 3D Camera Tracking..." class="flex-grow bg-ae-dark border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-ae-purple text-sm">
+                    <button onclick="submitNewTopic()" class="bg-ae-purple text-black font-bold px-4 py-2 rounded text-sm hover:bg-white transition-colors">Add</button>
                 </div>
             </div>
 
-        </div>
+            <!-- Topics Container -->
+            <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Topics will be injected here via JS -->
+                <div class="col-span-full flex items-center justify-center h-32">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+
     </main>
+
+    <!-- Sticky Footer Action Bar -->
+    <div id="stickyFooter" class="fixed bottom-0 left-0 right-0 bg-ae-panel border-t border-ae-purple shadow-[0_-5px_20px_rgba(0,0,0,0.5)] transform translate-y-full transition-transform duration-300 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-ae-purple bg-opacity-20 text-ae-purple px-3 py-1 rounded-full text-xs font-bold border border-ae-purple">
+                    <span id="selectionCount">0</span> Selected
+                </div>
+                <span class="text-gray-400 text-xs hidden md:inline">Great choices! Ready to submit?</span>
+            </div>
+            
+            <button id="submitBtn" onclick="submitVotes()" class="bg-ae-purple hover:bg-white text-black font-bold px-6 py-2 rounded shadow-lg transition-colors flex items-center gap-2">
+                <span>Submit Votes</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Message (Hidden) -->
+    <div id="successMessage" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center">
+        <div class="bg-ae-panel p-8 rounded-lg border border-ae-accent shadow-2xl max-w-md text-center transform transition-all scale-100">
+            <div class="w-16 h-16 bg-ae-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-ae-accent">
+                <i class="fa-solid fa-check text-2xl text-ae-accent"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Votes Recorded!</h2>
+            <p class="text-gray-400 mb-6">Thank you for helping shape the workshop curriculum.</p>
+            <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 text-white font-medium px-6 py-2 rounded transition-colors">Back to Home</button>
+        </div>
+    </div>
 
     <!-- Admin Panel (Hidden by default) -->
     <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#121212] overflow-auto">
@@ -237,21 +243,21 @@
                 <!-- Stats -->
                 <div class="bg-ae-panel p-6 rounded border border-gray-700">
                     <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Skill Distribution</h3>
-                    <canvas id="skillChart"></canvas>
+                    <div class="relative h-48">
+                        <canvas id="skillChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Leaderboard -->
                 <div class="lg:col-span-2 bg-ae-panel p-6 rounded border border-gray-700">
-                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Topic Demand (Weighted Score)</h3>
+                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Topic Popularity (Votes)</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-gray-400">
                             <thead class="text-xs uppercase bg-ae-dark text-gray-500">
                                 <tr>
                                     <th class="px-4 py-3">Topic</th>
-                                    <th class="px-4 py-3 text-center">1st</th>
-                                    <th class="px-4 py-3 text-center">2nd</th>
-                                    <th class="px-4 py-3 text-center">3rd</th>
-                                    <th class="px-4 py-3 text-right text-white">Score</th>
+                                    <th class="px-4 py-3 text-right">Vote Count</th>
+                                    <th class="px-4 py-3 w-1/3">Popularity</th>
                                 </tr>
                             </thead>
                             <tbody id="adminTableBody" class="divide-y divide-gray-800">
@@ -259,7 +265,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-4">* Score = (1st × 3) + (2nd × 2) + (3rd × 1)</p>
                 </div>
 
                 <!-- Manage Topics Section -->
@@ -298,7 +303,7 @@
 
         // Global State
         let topics = [];
-        let votes = { 1: null, 2: null, 3: null };
+        let selectedTopicIds = new Set(); // Changed from votes{1,2,3} to Set
         let skillLevel = null;
         const userId = localStorage.getItem('ae_voter_id') || 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('ae_voter_id', userId);
@@ -323,8 +328,7 @@
 
         // Initialize
         async function init() {
-            // Fetch topics without automatic sorting to handle custom orders manually in JS
-            // This is robust against missing 'order' fields
+            // Fetch topics
             const q = collection(db, "topics");
             
             onSnapshot(q, (snapshot) => {
@@ -337,8 +341,7 @@
                 if (fetchedTopics.length === 0) {
                     seedDefaults();
                 } else {
-                    // Sort in memory: Order ASC, then Title ASC
-                    // Treat missing order as very large number (bottom)
+                    // Sort in memory
                     topics = fetchedTopics.sort((a, b) => {
                         const orderA = typeof a.order === 'number' ? a.order : 9999;
                         const orderB = typeof b.order === 'number' ? b.order : 9999;
@@ -347,7 +350,7 @@
                     });
                     
                     renderTopics();
-                    renderManageTopics(); // Update admin view if open
+                    renderManageTopics(); 
                 }
                 
                 // If admin is open, refresh admin
@@ -364,7 +367,6 @@
         }
 
         async function seedDefaults() {
-            // Seed with index as order
             let i = 0;
             for (const t of defaultTopics) {
                 await addDoc(collection(db, "topics"), {
@@ -381,64 +383,49 @@
             container.innerHTML = '';
 
             topics.forEach(topic => {
-                const isSelected = Object.values(votes).some(v => v && v.id === topic.id);
+                const isSelected = selectedTopicIds.has(topic.id);
                 
                 const card = document.createElement('div');
-                card.className = `topic-card bg-ae-panel p-3 rounded border ${isSelected ? 'border-gray-600 opacity-50 cursor-default' : 'border-gray-600 hover:border-ae-purple hover:bg-gray-700 cursor-pointer'} h-24 flex items-center justify-center text-center select-none relative group`;
+                card.className = `topic-card relative p-4 rounded-lg border cursor-pointer select-none flex flex-col items-center justify-center text-center h-28 hover:bg-ae-panel transition-all 
+                    ${isSelected ? 'topic-selected bg-ae-panel border-ae-purple' : 'bg-ae-panel/50 border-gray-700 hover:border-gray-500'}`;
                 
-                card.onclick = () => !isSelected && handleTopicClick(topic);
+                card.onclick = () => toggleTopicSelection(topic.id);
 
                 card.innerHTML = `
-                    <span class="text-xs md:text-sm font-medium text-gray-200 group-hover:text-white pointer-events-none">${topic.title}</span>
-                    ${isSelected ? '<div class="absolute inset-0 flex items-center justify-center bg-black/40"><i class="fa-solid fa-check text-ae-accent"></i></div>' : ''}
+                    <div class="absolute top-2 right-2 check-icon text-ae-purple">
+                        <i class="fa-solid fa-circle-check fa-lg"></i>
+                    </div>
+                    <span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'} pointer-events-none">${topic.title}</span>
                 `;
                 container.appendChild(card);
             });
             
-            updateSubmitButton();
+            updateFooter();
         }
 
-        // Voting Logic
-        window.handleTopicClick = (topic) => {
-            // Find first empty slot
-            if (!votes[1]) votes[1] = topic;
-            else if (!votes[2]) votes[2] = topic;
-            else if (!votes[3]) votes[3] = topic;
-            else {
-                alert("You have 3 votes. Remove one to add another.");
-                return;
+        // Voting Logic (Multi-select)
+        window.toggleTopicSelection = (topicId) => {
+            if (selectedTopicIds.has(topicId)) {
+                selectedTopicIds.delete(topicId);
+            } else {
+                selectedTopicIds.add(topicId);
             }
-            updateSlots();
-            renderTopics();
+            renderTopics(); // Re-render to update classes
         };
 
-        window.clearSlot = (slotNum) => {
-            votes[slotNum] = null;
-            updateSlots();
-            renderTopics();
-        };
-
-        function updateSlots() {
-            for (let i = 1; i <= 3; i++) {
-                const el = document.getElementById(`slot-${i}`);
-                const topic = votes[i];
-                const content = el.querySelector('.slot-content');
-                
-                if (topic) {
-                    content.textContent = topic.title;
-                    content.classList.remove('text-gray-400');
-                    content.classList.add('text-white', 'font-semibold');
-                    el.classList.add('border-ae-purple', 'bg-gray-800');
-                    el.classList.remove('border-gray-600', 'border-dashed');
-                } else {
-                    content.textContent = "Select a topic...";
-                    content.classList.add('text-gray-400');
-                    content.classList.remove('text-white', 'font-semibold');
-                    el.classList.remove('border-ae-purple', 'bg-gray-800');
-                    el.classList.add('border-gray-600', 'border-dashed');
-                }
+        function updateFooter() {
+            const footer = document.getElementById('stickyFooter');
+            const countEl = document.getElementById('selectionCount');
+            const count = selectedTopicIds.size;
+            
+            countEl.textContent = count;
+            
+            // Show footer if at least one item selected OR skill selected (basically if user started interacting)
+            if (count > 0 || skillLevel) {
+                footer.classList.remove('translate-y-full');
+            } else {
+                footer.classList.add('translate-y-full');
             }
-            updateSubmitButton();
         }
 
         // Skill Logic
@@ -446,7 +433,6 @@
             skillLevel = level;
             document.getElementById('selectedSkill').value = level;
             
-            // Visual feedback
             document.querySelectorAll('.skill-btn').forEach(btn => {
                 const ring = btn.querySelector('.check-ring');
                 ring.classList.remove('opacity-100', 'scale-100');
@@ -462,8 +448,8 @@
                 targetBtn.classList.add('bg-gray-800', 'border-ae-accent');
             }
 
-            document.getElementById('votingSection').scrollIntoView({behavior: 'smooth'});
-            updateSubmitButton();
+            document.getElementById('votingSection').scrollIntoView({behavior: 'smooth', block: 'start'});
+            updateFooter();
         }
 
         // Add New Topic
@@ -477,7 +463,6 @@
             if (!title) return;
 
             try {
-                // Determine new order = max order + 1
                 const maxOrder = topics.reduce((max, t) => Math.max(max, typeof t.order === 'number' ? t.order : -1), -1);
 
                 await addDoc(collection(db, "topics"), {
@@ -494,38 +479,31 @@
             }
         };
 
-        function updateSubmitButton() {
-            const btn = document.getElementById('submitBtn');
-            const hasSkill = !!skillLevel;
-            const hasVotes = votes[1] || votes[2] || votes[3]; 
-            
-            if (hasSkill && hasVotes) {
-                btn.disabled = false;
-                btn.classList.remove('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
-                btn.classList.add('bg-ae-accent', 'text-black', 'cursor-pointer');
-            } else {
-                btn.disabled = true;
-                btn.classList.add('bg-gray-700', 'text-gray-400', 'cursor-not-allowed');
-                btn.classList.remove('bg-ae-accent', 'text-black', 'cursor-pointer');
-            }
-        }
-
         // Final Submit
         window.submitVotes = async () => {
             const btn = document.getElementById('submitBtn');
+            if (selectedTopicIds.size === 0) {
+                alert("Please select at least one topic.");
+                return;
+            }
+            if (!skillLevel) {
+                alert("Please select your experience level first.");
+                document.getElementById('introSection').scrollIntoView({behavior: 'smooth'});
+                return;
+            }
+
             btn.innerHTML = '<div class="spinner border-black border-l-transparent"></div>';
             
             try {
                 await addDoc(collection(db, "votes"), {
                     userId: userId,
                     skillLevel: skillLevel,
-                    vote1: votes[1] ? votes[1].id : null,
-                    vote2: votes[2] ? votes[2].id : null,
-                    vote3: votes[3] ? votes[3].id : null,
+                    selectedTopics: Array.from(selectedTopicIds), // Store as Array
                     submittedAt: serverTimestamp()
                 });
                 
                 document.getElementById('successMessage').classList.remove('hidden');
+                document.getElementById('stickyFooter').classList.add('translate-y-full'); // Hide footer
             } catch (e) {
                 console.error("Error submitting votes: ", e);
                 alert("Error submitting. Please try again.");
@@ -558,7 +536,6 @@
             const list = document.getElementById('adminTopicsList');
             if(!list) return;
 
-            // Use the globally sorted 'topics' array
             list.innerHTML = topics.map((t, index) => `
                 <div class="bg-gray-800 p-2 pl-3 rounded flex items-center gap-2 group border border-gray-700 hover:border-gray-500 transition-colors">
                     <div class="flex flex-col gap-0.5 mr-1">
@@ -589,94 +566,88 @@
 
             const topicA = topics[index];
             const topicB = topics[targetIndex];
-
-            // Normalize orders if missing
             const orderA = typeof topicA.order === 'number' ? topicA.order : index;
             const orderB = typeof topicB.order === 'number' ? topicB.order : targetIndex;
 
             try {
-                // Swap orders
                 await updateDoc(doc(db, "topics", topicA.id), { order: orderB });
                 await updateDoc(doc(db, "topics", topicB.id), { order: orderA });
-            } catch(e) {
-                console.error("Reorder failed", e);
-                alert("Failed to reorder.");
-            }
+            } catch(e) { console.error("Reorder failed", e); }
         };
 
         window.updateTopicName = async (id) => {
             const input = document.getElementById(`edit-input-${id}`);
             const newTitle = input.value.trim();
             if(!newTitle) return;
-            
             try {
                 const btn = input.nextElementSibling;
                 const originalIcon = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-                
-                await updateDoc(doc(db, "topics", id), {
-                    title: newTitle
-                });
-                
+                await updateDoc(doc(db, "topics", id), { title: newTitle });
                 btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 setTimeout(() => btn.innerHTML = originalIcon, 1500);
-            } catch(e) {
-                console.error("Error updating topic:", e);
-                alert("Failed to update topic");
-            }
+            } catch(e) { console.error("Error updating topic:", e); }
         };
 
         window.deleteTopic = async (id) => {
-            if(!confirm("Are you sure you want to delete this topic? It will be removed for all users immediately.")) return;
-            try {
-                await deleteDoc(doc(db, "topics", id));
-            } catch(e) {
-                console.error("Error deleting topic:", e);
-                alert("Failed to delete topic");
-            }
+            if(!confirm("Are you sure?")) return;
+            try { await deleteDoc(doc(db, "topics", id)); } catch(e) { console.error("Error deleting", e); }
         };
 
+        // Updated for new data structure
         async function calculateResults() {
             const votesSnap = await getDocs(collection(db, "votes"));
             const allVotes = [];
             votesSnap.forEach(doc => allVotes.push(doc.data()));
 
-            const scores = {};
-            
+            const scores = {}; // { topicId: { count: 0, title: '' } }
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
 
             allVotes.forEach(v => {
-                const processVote = (topicId, weight, slotName) => {
-                    if(!topicId) return;
-                    if(!scores[topicId]) scores[topicId] = { score: 0, first: 0, second: 0, third: 0, title: topicMap[topicId] || 'Deleted Topic' };
-                    scores[topicId].score += weight;
-                    scores[topicId][slotName]++;
-                };
-
-                processVote(v.vote1, 3, 'first');
-                processVote(v.vote2, 2, 'second');
-                processVote(v.vote3, 1, 'third');
+                // Handle new Array format
+                if (v.selectedTopics && Array.isArray(v.selectedTopics)) {
+                    v.selectedTopics.forEach(topicId => {
+                        if (!scores[topicId]) scores[topicId] = { count: 0, title: topicMap[topicId] || 'Unknown' };
+                        scores[topicId].count++;
+                    });
+                } 
+                // Handle old Legacy format (vote1, vote2, vote3)
+                else if (v.vote1) {
+                    [v.vote1, v.vote2, v.vote3].forEach(topicId => {
+                        if(topicId) {
+                            if (!scores[topicId]) scores[topicId] = { count: 0, title: topicMap[topicId] || 'Unknown' };
+                            scores[topicId].count++;
+                        }
+                    });
+                }
             });
 
-            const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
+            // Sort by count
+            const sortedTopics = Object.values(scores).sort((a, b) => b.count - a.count);
+            const maxVotes = sortedTopics.length > 0 ? sortedTopics[0].count : 1;
 
+            // Render Table
             const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = sortedTopics.map(t => `
+            tbody.innerHTML = sortedTopics.map(t => {
+                const width = (t.count / maxVotes) * 100;
+                return `
                 <tr class="hover:bg-gray-800">
                     <td class="px-4 py-3 font-medium text-white">${t.title}</td>
-                    <td class="px-4 py-3 text-center text-yellow-500 font-bold">${t.first}</td>
-                    <td class="px-4 py-3 text-center text-gray-400">${t.second}</td>
-                    <td class="px-4 py-3 text-center text-yellow-800">${t.third}</td>
-                    <td class="px-4 py-3 text-right text-ae-accent font-bold text-lg">${t.score}</td>
+                    <td class="px-4 py-3 text-right text-ae-accent font-bold">${t.count}</td>
+                    <td class="px-4 py-3">
+                        <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-ae-purple" style="width: ${width}%"></div>
+                        </div>
+                    </td>
                 </tr>
-            `).join('');
+            `}).join('');
 
+            // Skills Chart (Same as before)
             const skills = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 };
             allVotes.forEach(v => {
                 if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
             });
-
             renderChart(skills);
         }
 
@@ -698,8 +669,9 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#9ca3af' } }
+                        legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 10 } } }
                     }
                 }
             });
