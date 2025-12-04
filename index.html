@@ -139,27 +139,19 @@
                     <p class="text-xs text-gray-400">Curriculum Voting</p>
                 </div>
             </div>
-            <div id="userInfo" class="text-xs text-gray-500 font-medium text-ae-purple"></div>
+            <div id="userInfo" class="text-xs text-gray-500"></div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full space-y-8">
+    <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full space-y-12">
 
         <!-- Section 1: Introduction & Skill Level -->
         <section id="introSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl animate-fade-in-up" style="animation-delay: 0.1s;">
             <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                <span class="text-ae-purple mr-2">01.</span> Who are you?
+                <span class="text-ae-purple mr-2">01.</span> Your Experience
             </h2>
-            
-            <div class="mb-6">
-                <label class="block text-gray-400 text-xs uppercase font-bold mb-2">Your Name (Optional)</label>
-                <input type="text" id="userNameInput" placeholder="e.g. Alex (Product Design)" 
-                    class="w-full bg-ae-dark border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-ae-purple focus:ring-1 focus:ring-ae-purple transition-all"
-                    oninput="saveNameLocally(this.value)">
-            </div>
-
-            <p class="text-gray-400 mb-4 text-sm">How comfortable are you with After Effects?</p>
+            <p class="text-gray-400 mb-6">Before we dive into topics, how comfortable are you with After Effects?</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onclick="selectSkill('Beginner')" class="skill-btn group relative p-4 rounded bg-ae-dark border border-gray-700 hover:border-ae-accent hover:bg-opacity-50 transition-all text-left">
@@ -194,22 +186,14 @@
 
         <!-- Section 2: Voting -->
         <section id="votingSection" class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-gray-700 pb-2 gap-4">
-                <div>
-                    <h2 class="text-xl font-semibold text-white">
-                        <span class="text-ae-purple mr-2">02.</span> Select & Rank Topics
-                    </h2>
-                    <p class="text-gray-400 text-xs mt-1">Click topics in order of preference.</p>
+            <h2 class="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2 flex flex-wrap justify-between items-end gap-2">
+                <span><span class="text-ae-purple mr-2">02.</span> Select & Rank Topics</span>
+                <div class="flex flex-col items-end">
+                    <span class="text-xs font-normal text-gray-400 bg-gray-800 px-2 py-1 rounded border border-gray-700">Click in order of preference (#1, #2, #3...)</span>
                 </div>
-                <div class="flex gap-2">
-                     <span class="text-[10px] text-gray-500 bg-gray-800 px-2 py-1 rounded border border-gray-700 h-fit self-center">1st = 3pts, 2nd = 2pts</span>
-                     <button onclick="clearAllSelections()" class="text-xs text-red-400 hover:text-red-300 border border-red-900/50 hover:bg-red-900/20 px-3 py-1.5 rounded transition-all">
-                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset
-                    </button>
-                </div>
-            </div>
+            </h2>
 
-            <!-- Topic Actions -->
+            <!-- Topic Grid -->
             <div class="mb-6 flex justify-between items-center">
                 <h3 class="text-gray-400 text-sm">Available Topics</h3>
                 <button onclick="toggleNewTopicForm()" class="text-xs text-ae-purple hover:text-white border border-ae-purple hover:bg-ae-purple hover:bg-opacity-20 px-3 py-1.5 rounded transition-all flex items-center gap-2">
@@ -228,19 +212,11 @@
 
             <!-- Topics Container -->
             <div id="topicsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Topics will be injected here via JS -->
                 <div class="col-span-full flex items-center justify-center h-32">
                     <div class="spinner"></div>
                 </div>
             </div>
-        </section>
-
-        <!-- Section 3: Additional Comments -->
-        <section id="commentsSection" class="bg-ae-panel p-6 rounded-lg border border-gray-700 shadow-xl animate-fade-in-up mb-12" style="animation-delay: 0.3s;">
-             <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                <span class="text-ae-purple mr-2">03.</span> Specific Requests
-            </h2>
-            <p class="text-gray-400 text-xs mb-3">Anything specific you want to focus on? (e.g. "Exporting for Web", "Plugin workflows")</p>
-            <textarea id="commentsInput" rows="3" class="w-full bg-ae-dark border border-gray-600 rounded p-3 text-white focus:outline-none focus:border-ae-purple text-sm" placeholder="Type here..."></textarea>
         </section>
 
     </main>
@@ -252,7 +228,7 @@
                 <div class="bg-ae-purple bg-opacity-20 text-ae-purple px-3 py-1 rounded-full text-xs font-bold border border-ae-purple">
                     <span id="selectionCount">0</span> Ranked
                 </div>
-                <span class="text-gray-400 text-xs hidden md:inline">Ready to submit your preferences?</span>
+                <span class="text-gray-400 text-xs hidden md:inline">Great choices! Ready to submit?</span>
             </div>
             
             <button id="submitBtn" onclick="submitVotes()" class="bg-ae-purple hover:bg-white text-black font-bold px-6 py-2 rounded shadow-lg transition-colors flex items-center gap-2">
@@ -311,14 +287,6 @@
                     <p class="text-[10px] text-gray-500 mt-4">* Scoring: 1st=3pts, 2nd=2pts, Others=1pt</p>
                 </div>
 
-                <!-- User Requests / Comments -->
-                <div class="lg:col-span-3 bg-ae-panel p-6 rounded border border-gray-700">
-                    <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">User Comments & Requests</h3>
-                    <div id="adminCommentsList" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-2">
-                        <!-- JS injected comments -->
-                    </div>
-                </div>
-
                 <!-- Manage Topics Section -->
                 <div class="col-span-1 lg:col-span-3 bg-ae-panel p-6 rounded border border-gray-700 mt-2">
                     <h3 class="text-gray-400 uppercase text-xs font-bold mb-4">Manage Topics</h3>
@@ -357,8 +325,6 @@
         let topics = [];
         let selectedTopicIds = []; // ARRAY now, to preserve Order!
         let skillLevel = null;
-        let userName = localStorage.getItem('ae_voter_name') || '';
-        
         const userId = localStorage.getItem('ae_voter_id') || 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('ae_voter_id', userId);
 
@@ -382,12 +348,6 @@
 
         // Initialize
         async function init() {
-            // Restore Name
-            if(userName) {
-                document.getElementById('userNameInput').value = userName;
-                updateHeaderName();
-            }
-
             // Fetch topics
             const q = collection(db, "topics");
             
@@ -435,17 +395,6 @@
                     createdAt: serverTimestamp()
                 });
             }
-        }
-
-        window.saveNameLocally = (val) => {
-            userName = val;
-            localStorage.setItem('ae_voter_name', val);
-            updateHeaderName();
-        }
-
-        function updateHeaderName() {
-            const el = document.getElementById('userInfo');
-            el.textContent = userName ? `Hello, ${userName}` : '';
         }
 
         // Render Topics
@@ -497,11 +446,6 @@
             }
             renderTopics(); 
         };
-
-        window.clearAllSelections = () => {
-            selectedTopicIds = [];
-            renderTopics();
-        }
 
         function updateFooter() {
             const footer = document.getElementById('stickyFooter');
@@ -571,8 +515,6 @@
         // Final Submit
         window.submitVotes = async () => {
             const btn = document.getElementById('submitBtn');
-            const comments = document.getElementById('commentsInput').value;
-
             if (selectedTopicIds.length === 0) {
                 alert("Please select at least one topic.");
                 return;
@@ -588,10 +530,8 @@
             try {
                 await addDoc(collection(db, "votes"), {
                     userId: userId,
-                    userName: userName || 'Anonymous',
                     skillLevel: skillLevel,
                     selectedTopics: selectedTopicIds, // Saved as Ordered Array
-                    comments: comments,
                     submittedAt: serverTimestamp()
                 });
                 
@@ -697,19 +637,7 @@
             const topicMap = {};
             topics.forEach(t => topicMap[t.id] = t.title);
 
-            // Comments Aggregation
-            const commentsContainer = document.getElementById('adminCommentsList');
-            commentsContainer.innerHTML = '';
-
             allVotes.forEach(v => {
-                // Comments
-                if(v.comments) {
-                    const commentEl = document.createElement('div');
-                    commentEl.className = 'bg-gray-800 p-3 rounded border border-gray-700 text-xs';
-                    commentEl.innerHTML = `<span class="text-ae-purple font-bold block mb-1">${v.userName || 'Anonymous'} <span class="text-gray-500 font-normal ml-1">(${v.skillLevel || 'Unknown'})</span></span> ${v.comments}`;
-                    commentsContainer.appendChild(commentEl);
-                }
-
                 // New System (Array of IDs, ordered by preference)
                 if (v.selectedTopics && Array.isArray(v.selectedTopics)) {
                     v.selectedTopics.forEach((topicId, index) => {
@@ -735,11 +663,6 @@
                     if(v.vote3) scores[v.vote3].score += 1;
                 }
             });
-
-            // If no comments
-            if(commentsContainer.innerHTML === '') {
-                commentsContainer.innerHTML = '<div class="text-gray-500 text-xs italic">No specific comments submitted yet.</div>';
-            }
 
             // Sort by score
             const sortedTopics = Object.values(scores).sort((a, b) => b.score - a.score);
