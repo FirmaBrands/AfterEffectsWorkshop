@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
@@ -69,10 +69,6 @@
 
         .loader { width: 20px; height: 20px; border: 2px solid #333; border-bottom-color: #fff; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Admin Table Styles */
-        .admin-table-row:hover { background-color: rgba(255,255,255,0.03); }
-        .admin-table-row:hover td { border-color: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col selection:bg-brand-primary selection:text-white pb-32">
@@ -175,10 +171,10 @@
         </div>
     </div>
 
-    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#050505]/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-fade-in">
-        <div class="max-w-7xl mx-auto p-4 md:p-8">
+    <div id="adminPanel" class="hidden fixed inset-0 z-[100] bg-[#050505]/90 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-fade-in">
+        <div class="max-w-7xl mx-auto p-6 md:p-10">
             
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/10 pb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 border-b border-white/10 pb-6">
                 <div class="flex items-center gap-5">
                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center shadow-lg">
                         <i class="fa-solid fa-chart-pie text-brand-secondary text-xl"></i>
@@ -198,107 +194,109 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-2xl shadow-xl">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-2xl shadow-xl group hover:border-brand-primary/30 transition-colors">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <i class="fa-solid fa-users text-6xl text-brand-primary transform rotate-12"></i>
                     </div>
                     <p class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Total Participants</p>
                     <h2 class="text-4xl font-mono font-bold text-white tracking-tighter" id="adminTotalVotes">0</h2>
+                    <div class="mt-4 flex items-center gap-2 text-[10px] text-green-400 bg-green-400/10 w-fit px-2 py-1 rounded border border-green-400/20">
+                        <i class="fa-solid fa-arrow-trend-up"></i> <span>Live Data</span>
+                    </div>
                 </div>
 
-                <div class="relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-2xl shadow-xl">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                <div class="relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-2xl shadow-xl group hover:border-brand-secondary/30 transition-colors">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <i class="fa-solid fa-trophy text-6xl text-brand-secondary transform -rotate-12"></i>
                     </div>
                     <p class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Winning Topic</p>
                     <h2 class="text-2xl font-bold text-white leading-tight line-clamp-2 min-h-[4rem] flex items-center" id="adminTopTopic">-</h2>
-                </div>
-
-                <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 shadow-xl flex items-center justify-between">
-                    <div class="h-28 w-28 relative">
-                        <canvas id="skillChart"></canvas>
-                    </div>
-                    <div class="flex-grow pl-4 space-y-2 text-xs">
-                        <div class="flex justify-between text-gray-400"><span>New</span><span id="statBeginner" class="text-white font-bold">0</span></div>
-                        <div class="flex justify-between text-gray-400"><span>Novice</span><span id="statInter" class="text-white font-bold">0</span></div>
-                        <div class="flex justify-between text-gray-400"><span>Pro</span><span id="statAdv" class="text-white font-bold">0</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
-                
-                <div class="xl:col-span-8 bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-                    <div class="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center backdrop-blur-md">
-                        <h3 class="font-bold text-gray-200 flex items-center gap-2">
-                            <i class="fa-solid fa-list-ol text-gray-500"></i> Topic Leaderboard
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto max-h-[400px] custom-scrollbar">
-                        <table class="w-full text-left text-sm">
-                            <thead class="text-xs text-gray-500 bg-black/40 uppercase font-bold tracking-wider sticky top-0 backdrop-blur-md">
-                                <tr>
-                                    <th class="px-6 py-4 w-20 text-center">Rank</th>
-                                    <th class="px-6 py-4">Topic Name</th>
-                                    <th class="px-6 py-4 text-right">Points</th>
-                                    <th class="px-6 py-4 w-48">Interest Level</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminTableBody" class="divide-y divide-white/5 text-gray-300 font-medium"></tbody>
-                        </table>
+                    <div class="w-full bg-gray-800 h-1 mt-2 rounded-full overflow-hidden">
+                        <div class="bg-brand-secondary h-full w-3/4 animate-pulse"></div>
                     </div>
                 </div>
 
-                <div class="xl:col-span-4 bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Preference by Skill Level</h3>
-                    <div class="flex-grow min-h-[300px] relative">
-                        <canvas id="breakdownChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[500px]">
-                     <div class="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-200 flex items-center gap-2">
-                            <i class="fa-solid fa-database text-gray-500"></i> Vote Registry
-                        </h3>
-                        <span class="text-[10px] text-gray-500">Manage individual submissions</span>
-                    </div>
-                    <div class="overflow-auto flex-grow custom-scrollbar">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-black/40 text-gray-500 uppercase sticky top-0 backdrop-blur-md">
-                                <tr>
-                                    <th class="px-4 py-3">Time</th>
-                                    <th class="px-4 py-3">User / ID</th>
-                                    <th class="px-4 py-3">Skill</th>
-                                    <th class="px-4 py-3">Selection</th>
-                                    <th class="px-4 py-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="voteRegistryBody" class="divide-y divide-white/5 text-gray-400"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col h-[500px]">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 class="text-sm font-bold text-gray-200 uppercase tracking-wide">Manage Topics</h3>
-                            <p class="text-[10px] text-gray-500 mt-1">Drag to reorder public list</p>
+                <div class="relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">System Status</p>
+                        <div class="flex items-center gap-3">
+                            <span class="relative flex h-3 w-3">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                            </span>
+                            <span class="text-lg font-medium text-gray-200">Collecting Votes</span>
                         </div>
-                        <button onclick="toggleNewTopic()" class="w-8 h-8 rounded bg-brand-secondary/10 text-brand-secondary hover:bg-brand-secondary hover:text-black transition-colors flex items-center justify-center border border-brand-secondary/20">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
                     </div>
-                    <div id="adminTopicsList" class="flex-grow overflow-y-auto pr-2 custom-scrollbar space-y-2"></div>
+                    <div class="mt-4 text-[10px] text-gray-600 font-mono">
+                        Firebase: Connected<br>
+                        Latency: 24ms
+                    </div>
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                
+                <div class="xl:col-span-8 space-y-6">
+                    <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full">
+                        <div class="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center backdrop-blur-md">
+                            <h3 class="font-bold text-gray-200 flex items-center gap-2">
+                                <i class="fa-solid fa-list-ol text-gray-500"></i> Leaderboard
+                            </h3>
+                            <span class="text-[10px] bg-black/50 border border-white/10 text-gray-400 px-3 py-1 rounded-full">Weighted Score (1st=3pts)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-gray-500 bg-black/40 uppercase font-bold tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4 w-20 text-center">Rank</th>
+                                        <th class="px-6 py-4">Topic Name</th>
+                                        <th class="px-6 py-4 text-right">Points</th>
+                                        <th class="px-6 py-4 w-48">Interest Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTableBody" class="divide-y divide-white/5 text-gray-300 font-medium">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-4 space-y-8">
+                    
+                    <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col h-[500px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-200 uppercase tracking-wide">Manage Topics</h3>
+                                <p class="text-[10px] text-gray-500 mt-1">Drag to reorder public list</p>
+                            </div>
+                            <button onclick="toggleNewTopic()" class="w-8 h-8 rounded bg-brand-secondary/10 text-brand-secondary hover:bg-brand-secondary hover:text-black transition-colors flex items-center justify-center border border-brand-secondary/20">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="adminTopicsList" class="flex-grow overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                            </div>
+                    </div>
+
+                    <div class="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 shadow-2xl">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Skill Distribution</h3>
+                        <div class="h-48 relative">
+                            <canvas id="skillChart"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <i class="fa-solid fa-users text-gray-800 text-4xl opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
+
+    <footer class="py-8 text-center">
+        <p class="text-[10px] text-gray-800 cursor-pointer hover:text-gray-700 transition-colors" onclick="openAdmin()">Admin Access</p>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -358,6 +356,8 @@
         function renderTopics() {
             const container = document.getElementById('topicsContainer');
             container.innerHTML = '';
+
+            // Suggest Card
             const addCard = document.createElement('div');
             addCard.className = `add-card h-20 rounded-lg cursor-pointer flex items-center justify-center gap-2 group transition-all duration-200`;
             addCard.onclick = window.toggleNewTopic;
@@ -368,20 +368,26 @@
                 <span class="text-xs font-bold text-gray-400 group-hover:text-white uppercase tracking-wider">Suggest Topic</span>
             `;
             container.appendChild(addCard);
+
             topics.forEach(topic => {
                 const rankIndex = selectedTopicIds.indexOf(topic.id);
                 const isSelected = rankIndex !== -1;
                 const rank = rankIndex + 1;
+                
                 let badgeClass = 'bg-brand-primary text-white';
                 let borderClass = isSelected ? 'border-brand-primary' : 'border-white/5';
+                
                 if(isSelected) {
                     if(rank === 1) { badgeClass = 'bg-yellow-400 text-black shadow-lg shadow-yellow-500/50'; borderClass = 'border-yellow-400/50'; }
                     else if(rank === 2) { badgeClass = 'bg-slate-300 text-black shadow-lg shadow-slate-300/50'; borderClass = 'border-slate-300/50'; }
                     else if(rank === 3) { badgeClass = 'bg-orange-400 text-black shadow-lg shadow-orange-500/50'; borderClass = 'border-orange-400/50'; }
                 }
+
                 const card = document.createElement('div');
                 card.className = `group relative h-20 rounded-lg border ${isSelected ? 'card-selected' : 'bg-white/5 hover:border-white/20 hover:bg-white/10'} cursor-pointer transition-all duration-200 select-none flex items-center px-4 ${borderClass}`;
+                
                 card.onclick = () => toggleTopic(topic.id);
+
                 card.innerHTML = `
                     <div class="flex-grow pr-2"><span class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'} transition-colors">${topic.title}</span></div>
                     ${isSelected ? `
@@ -395,16 +401,20 @@
             updateFooter();
         }
 
+        // --- Interactions (Global Window Scope) ---
         window.selectSkill = (level) => {
             skillLevel = level;
             document.getElementById('selectedSkill').value = level;
+            
             document.querySelectorAll('.skill-btn').forEach(btn => {
                 btn.classList.remove('card-selected', 'border-brand-primary', 'bg-white/5');
                 btn.classList.add('glass-panel');
                 btn.querySelector('.check-circle').classList.remove('bg-white', 'border-transparent');
             });
+
             const targetBtn = Array.from(document.querySelectorAll('.skill-btn'))
                 .find(b => b.innerText.includes(level === 'Beginner' ? 'Newcomer' : level === 'Intermediate' ? 'Novice' : 'Pro'));
+            
             if(targetBtn) {
                 targetBtn.classList.add('card-selected');
                 targetBtn.classList.remove('glass-panel');
@@ -469,6 +479,7 @@
             document.body.style.overflow = 'auto';
         };
 
+        // Renders the list and Initializes SortableJS
         let sortableInstance = null;
         function renderManageTopics() {
             const list = document.getElementById('adminTopicsList');
@@ -476,9 +487,11 @@
 
             list.innerHTML = topics.map((t) => `
                 <div class="group relative bg-[#141414] hover:bg-[#1a1a1a] rounded-lg border border-white/5 hover:border-white/20 transition-all p-3 flex items-center gap-3 select-none" data-id="${t.id}">
+                    
                     <div class="drag-handle w-6 h-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-white transition-colors">
                         <i class="fa-solid fa-grip-vertical"></i>
                     </div>
+
                     <div class="flex-grow min-w-0">
                         <input id="edit-${t.id}" 
                                value="${t.title}" 
@@ -487,15 +500,18 @@
                                placeholder="Topic Name">
                         <div class="text-[10px] text-gray-600 mt-0.5 font-mono">ID: ${t.id.substr(0,6)}...</div>
                     </div>
+                    
                     <div class="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                         <button onclick="window.deleteTopic('${t.id}')" class="w-8 h-8 rounded hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center" title="Delete Topic">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>
+
                     <div class="absolute left-0 top-3 bottom-3 w-0.5 rounded-r bg-brand-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
             `).join('');
 
+            // Initialize Sortable logic
             if(sortableInstance) sortableInstance.destroy(); 
             sortableInstance = new Sortable(list, {
                 animation: 200,
@@ -503,13 +519,22 @@
                 ghostClass: 'sortable-ghost',
                 dragClass: 'sortable-drag',
                 onEnd: async function(evt) {
+                    // Reorder Logic: Batch update all items to new indexes
                     const newOrderIds = Array.from(list.children).map(child => child.getAttribute('data-id'));
                     const batch = writeBatch(db);
+                    
                     newOrderIds.forEach((id, index) => {
                         const ref = doc(db, "topics", id);
                         batch.update(ref, { order: index });
                     });
-                    try { await batch.commit(); } catch(e) { console.error("Batch update failed", e); }
+
+                    try {
+                        await batch.commit();
+                        console.log("Order updated successfully");
+                    } catch(e) {
+                        console.error("Batch update failed", e);
+                        alert("Failed to save order");
+                    }
                 }
             });
         }
@@ -520,94 +545,39 @@
         };
         window.deleteTopic = async (id) => { if(confirm("Delete this topic?")) await deleteDoc(doc(db, "topics", id)); };
 
-        // --- NEW: Vote Management & Deep Data ---
-        window.deleteVote = async (id) => { 
-            if(confirm("Delete this vote permanently?")) {
-                await deleteDoc(doc(db, "votes", id));
-                window.calculateResults(); 
-            }
-        };
-
         window.calculateResults = async () => {
-            // Fetch latest votes
-            const qVotes = query(collection(db, "votes"), orderBy("submittedAt", "desc"));
-            const snap = await getDocs(qVotes);
-            
+            const snap = await getDocs(collection(db, "votes"));
             const scores = {};
             const topicMap = {};
-            topics.forEach(t => {
-                topicMap[t.id] = t.title;
-                scores[t.id] = { score: 0, title: t.title, beginner: 0, intermediate: 0, advanced: 0 };
-            });
-            
+            topics.forEach(t => topicMap[t.id] = t.title);
             const skills = { Beginner:0, Intermediate:0, Advanced:0 };
             let totalVotes = 0;
-            const voteRegistryHTML = [];
 
-            snap.forEach(docSnap => {
-                const v = docSnap.data();
-                const vId = docSnap.id;
+            snap.forEach(doc => {
+                const v = doc.data();
                 totalVotes++;
-                
-                // Aggregate Skill Counts
                 if(skills[v.skillLevel] !== undefined) skills[v.skillLevel]++;
                 
-                // Process Topics (Scoring + Deep Dive Data)
-                let selectedNames = [];
                 if(v.selectedTopics && Array.isArray(v.selectedTopics)) {
                     v.selectedTopics.forEach((tid, idx) => {
-                        if(scores[tid]) {
-                            // Points
-                            scores[tid].score += (idx === 0 ? 3 : idx === 1 ? 2 : 1);
-                            // Deep Dive Stats
-                            if(v.skillLevel === 'Beginner') scores[tid].beginner++;
-                            if(v.skillLevel === 'Intermediate') scores[tid].intermediate++;
-                            if(v.skillLevel === 'Advanced') scores[tid].advanced++;
-                            
-                            selectedNames.push(scores[tid].title);
-                        }
+                        if(!scores[tid]) scores[tid] = { score:0, title: topicMap[tid] || 'Unknown' };
+                        scores[tid].score += (idx === 0 ? 3 : idx === 1 ? 2 : 1);
                     });
                 }
-
-                // Render Registry Row
-                let skillBadge = '';
-                if(v.skillLevel === 'Beginner') skillBadge = '<span class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold">New</span>';
-                else if(v.skillLevel === 'Intermediate') skillBadge = '<span class="px-2 py-0.5 rounded bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[10px] font-bold">Novice</span>';
-                else skillBadge = '<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold">Pro</span>';
-
-                const timeStr = v.submittedAt ? moment(v.submittedAt.toDate()).fromNow() : 'Just now';
-
-                voteRegistryHTML.push(`
-                    <tr class="admin-table-row border-b border-white/5 last:border-0 transition-colors">
-                        <td class="px-4 py-3 font-mono text-gray-500 whitespace-nowrap">${timeStr}</td>
-                        <td class="px-4 py-3 text-gray-300 font-mono" title="${v.userId}">${v.userId.substring(0,8)}...</td>
-                        <td class="px-4 py-3">${skillBadge}</td>
-                        <td class="px-4 py-3 text-white truncate max-w-[200px]" title="${selectedNames.join(', ')}">${selectedNames.join(', ')}</td>
-                        <td class="px-4 py-3 text-right">
-                            <button onclick="window.deleteVote('${vId}')" class="text-gray-600 hover:text-red-400 transition-colors p-1"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `);
             });
 
-            // Update Registry Table
-            document.getElementById('voteRegistryBody').innerHTML = voteRegistryHTML.join('');
-
-            // Update Top Stats
             const sorted = Object.values(scores).sort((a,b) => b.score - a.score);
             const max = sorted[0]?.score || 1;
+            
             document.getElementById('adminTotalVotes').innerText = totalVotes;
             document.getElementById('adminTopTopic').innerText = sorted.length > 0 ? sorted[0].title : '-';
-            document.getElementById('statBeginner').innerText = skills.Beginner;
-            document.getElementById('statInter').innerText = skills.Intermediate;
-            document.getElementById('statAdv').innerText = skills.Advanced;
 
-            // Update Leaderboard Table
             document.getElementById('adminTableBody').innerHTML = sorted.map((t, index) => {
                 let badge = `<span class="text-gray-500 font-mono">#${index+1}</span>`;
                 if(index===0) badge = `<span class="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded text-[10px] font-bold border border-yellow-500/30">#1</span>`;
                 if(index===1) badge = `<span class="bg-gray-400/20 text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold border border-gray-400/30">#2</span>`;
                 if(index===2) badge = `<span class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-[10px] font-bold border border-orange-500/30">#3</span>`;
+
                 return `
                 <tr class="hover:bg-white/5 transition-colors border-b border-gray-800/50 last:border-0">
                     <td class="px-6 py-4 text-center">${badge}</td>
@@ -621,7 +591,6 @@
                 </tr>
             `}).join('');
 
-            // Chart 1: Skill Distribution (Doughnut)
             if(window.myChart) window.myChart.destroy();
             window.myChart = new Chart(document.getElementById('skillChart'), {
                 type: 'doughnut',
@@ -634,30 +603,11 @@
                         borderWidth: 2
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
-            });
-
-            // Chart 2: Deep Dive (Stacked Bar)
-            const top5Topics = sorted.slice(0, 5); // Just show top 5 to keep chart clean
-            if(window.breakdownChart) window.breakdownChart.destroy();
-            window.breakdownChart = new Chart(document.getElementById('breakdownChart'), {
-                type: 'bar',
-                data: {
-                    labels: top5Topics.map(t => t.title),
-                    datasets: [
-                        { label: 'New', data: top5Topics.map(t => t.beginner), backgroundColor: '#4ade80', barThickness: 12 },
-                        { label: 'Novice', data: top5Topics.map(t => t.intermediate), backgroundColor: '#8b5cf6', barThickness: 12 },
-                        { label: 'Pro', data: top5Topics.map(t => t.advanced), backgroundColor: '#f43f5e', barThickness: 12 }
-                    ]
-                },
                 options: { 
                     responsive: true, 
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { color: '#9ca3af', font: {size: 10} } },
-                        y: { stacked: true, grid: { color: '#333' }, ticks: { color: '#666' }, beginAtZero: true }
-                    },
-                    plugins: { legend: { labels: { color: '#999', usePointStyle: true, boxWidth: 6 } } }
+                    maintainAspectRatio: false, 
+                    cutout: '70%',
+                    plugins: { legend: { position: 'right', labels: { color: '#9ca3af', font: {size:10, family:'Inter'} } } } 
                 }
             });
         }
